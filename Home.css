@@ -81,11 +81,12 @@ body {
 
 /* Main Content */
 .main-content {
-    display: grid;
+    display: block;
     grid-template-columns: 1fr 1fr;
     gap: 50px;
-    align-items: center;
-    margin-bottom: 60px;
+    align-items: left;
+    margin-bottom: 30px;
+
 }
 
 .hero-text {
@@ -140,58 +141,15 @@ body {
     box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
 }
 
-.video-container {
-    position: relative;
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-    animation: fadeInRight 1s ease-out;
-}
-
-.video-thumbnail {
-    width: 100%;
-    display: block;
-    transition: transform 0.5s;
-}
-
-.video-container:hover .video-thumbnail {
-    transform: scale(1.05);
-}
-
-.play-button {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 70px;
-    height: 70px;
-    background-color: rgba(255,255,255,0.9);
-    border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-    transition: all 0.3s;
-}
-
-.play-button i {
-    color: var(--accent-color);
-    font-size: 24px;
-    margin-left: 5px;
-}
-
-.play-button:hover {
-    background-color: white;
-    transform: translate(-50%, -50%) scale(1.1);
-}
-
 /* Features Section */
 .features {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 30px;
-    margin-top: 0; /* Cambia de 60px a 0 */
+    display: flex; /* Usamos flexbox para alinear horizontalmente */
+    justify-content: center; /* Centra los cuadros horizontalmente */
+    gap: 30px; /* Espacio entre cuadros */
+    margin-top: 40px; /* Espacio después del texto principal */
+    flex-wrap: wrap; /* Permite que se apilen en móviles */
 }
+
 
 .feature-card {
     background-color: white;
@@ -200,6 +158,9 @@ body {
     box-shadow: 0 5px 15px rgba(0,0,0,0.05);
     transition: all 0.3s;
     text-align: center;
+    flex: 1; /* Cada cuadro ocupa igual espacio */
+    min-width: 250px; /* Ancho mínimo para cada cuadro */
+    max-width: 350px;
 }
 
 .feature-card:hover {
