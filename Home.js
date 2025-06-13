@@ -1,4 +1,3 @@
-// Video Modal functionality
 const playButton = document.getElementById('playButton');
 const videoModal = document.getElementById('videoModal');
 const closeModal = document.getElementById('closeModal');
@@ -16,7 +15,7 @@ closeModal.addEventListener('click', () => {
     document.body.style.overflow = 'auto';
 });
 
-// Close modal when clicking outside
+
 window.addEventListener('click', (e) => {
     if (e.target === videoModal) {
         videoFrame.src = '';
@@ -25,21 +24,16 @@ window.addEventListener('click', (e) => {
     }
 });
 
-// Smooth scroll for navigation
 document.querySelectorAll('.nav-item').forEach(item => {
     item.addEventListener('click', (e) => {
         e.preventDefault();
-        
-        // Remove active class from all items
+      
         document.querySelectorAll('.nav-item').forEach(navItem => {
             navItem.classList.remove('active');
         });
         
-        // Add active class to clicked item
         item.classList.add('active');
         
-        // Here you would typically scroll to the corresponding section
-        // For demo purposes, we'll just log it
         console.log(`Navigating to: ${item.textContent}`);
     });
 });
