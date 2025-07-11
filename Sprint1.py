@@ -45,8 +45,9 @@ if opcion == "1":
     print("¿Cual es tu profesion?")
     print("1. Trabajador")
     print("2. Cliente")
+    print("3. Desempleado")
 
-    profesion = input("Elegí una opción (1 o 2): ")
+    profesion = input("Elegí una opción (1, 2 o 3): ")
     
     if profesion == "1":
         mail = input("Ingresá tu mail: ")
@@ -111,8 +112,9 @@ elif opcion == "2":
     print("¿Qué querés ser?")
     print("1. Cliente")
     print("2. Trabajador")  
+    print("3. Desempleado")  
 
-    RProfesion = input("Elegí una opción (1 o 2): ")
+    RProfesion = input("Elegí una opción (1, 2 o 3): ")
     
     if RProfesion == "1":
         cursor.execute('SELECT COUNT(*) FROM cliente')
@@ -438,6 +440,43 @@ elif opcion == "2":
         )
   
         print("✅ Te registraste bien. ¡Bienvenido,", RTNombre + "!")
+    
+    elif RProfesion == "3":
+        RDMail = input("Mail: ")
+        cursor.execute('SELECT * FROM cliente WHERE "Mail" = %s', (RDMail,))
+        existente = cursor.fetchone()
+
+        while existente:
+            print("❌ El mail ya está registrado. Ingresá otro mail:")
+            RDMail = input("Mail: ")
+            cursor.execute('SELECT * FROM desempleado WHERE "Mail" = %s', (RDMail,))
+            existente = cursor.fetchone()
+
+
+        RDNombre = input("Nombre: ")
+        RDApellido = input("Apellido: ")
+        print("¿Terminaste el secundario?")
+        print("1. Si")
+        print("2. No")
+        RDSecundaria = input("Elegí una opción (1 o 2): ")
+
+        if RDSecundaria == 1:
+            RDSecundaria = True
+
+        elif RDSecundaria == 2:
+            RDSecundaria = False
+        
+        RDBirth = input("Fecha nacimiento (dejar espacio usando -): ")
+        RDContraseña = input("Contraseña: ")
+        print("Selecciona tu CV en formato PDF")
+        ruta_archivo = seleccionar_pdf()
+        if ruta_archivo:
+            with open(ruta_archivo, "rb") as f:
+                RDCv = f.read()
+
+
+        
+ 
 
 else:
     print("No es una opción")
@@ -445,5 +484,3 @@ else:
 conexion.commit()
 cursor.close()
 conexion.close()
-for key in especializaciones_booleans:
-    especializaciones_booleans[key] = False
