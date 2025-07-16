@@ -46,5 +46,25 @@
   </div>
 
   <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+  <script>
+document.querySelector('.btn-login').addEventListener('click', function() {
+    const role = document.querySelector('input[name="rol"]:checked').value;
+    const userType = {
+        'cliente': '1',
+        'trabajador': '2', 
+        'desempleado': '3'
+    }[role];
+    
+    localStorage.setItem('userType', userType);
+    localStorage.setItem('isLoggedIn', 'true');
+    window.location.href = 'Home.html';
+});
+</script>
+
+
+
+<script src="auth-check.js"></script>
+<script src="auth.js"></script>
+<script src="session-manager.js"></script>
 </body>
 </html>

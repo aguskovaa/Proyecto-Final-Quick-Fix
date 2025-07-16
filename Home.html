@@ -38,6 +38,7 @@
                 <div class="tagline">Soluciones a tu alcance</div>
                 <h1 class="title">Servicios rápidos y <span>confiables</span> cuando más los necesitas</h1>
                 <p class="description">Conectamos con los mejores profesionales para resolver tus problemas domésticos y técnicos con garantía de calidad y satisfacción.</p>
+                <!--
                 <div class="cta-container">
                     <a href="Browser.html" class="cta-button primary">
                         Solicitar servicio
@@ -47,10 +48,85 @@
                         Conocer más
                     </a>
                 </div>
+                -->
+                <div class="cta-container" id="main-buttons-container">
+                    <!-- Los botones se generarán automáticamente -->
+                </div>
             </div>
         </main>
     </div>
+
+
+<script>
+// Sistema de autenticación infalible
+document.addEventListener('DOMContentLoaded', function() {
+    const container = document.getElementById('main-buttons-container');
     
+    // Verificar si hay sesión
+    const userType = localStorage.getItem('userType');
+    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    
+    if (isLoggedIn && userType) {
+        // Usuario logueado
+        if (userType === '1') { // Cliente
+            container.innerHTML = `
+                <a href="Browser.html" class="cta-button primary">
+                    Buscar Profesionales
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+                <button onclick="logout()" class="cta-button secondary">
+                    Cerrar sesión
+                </button>
+            `;
+        } else { // Trabajador/Desempleado
+            container.innerHTML = `
+                <a href="AceptarTrabajos.html" class="cta-button primary">
+                    ${userType === '2' ? 'Buscar Trabajos' : 'Explorar Oportunidades'}
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+                <button onclick="logout()" class="cta-button secondary">
+                    Cerrar sesión
+                </button>
+            `;
+        }
+    } else {
+        // Usuario no logueado
+        container.innerHTML = `
+            <a href="Inicio de Sesion.html" class="cta-button primary">
+                Iniciar sesión
+                <i class="fas fa-sign-in-alt"></i>
+            </a>
+            <a href="Registro.html" class="cta-button secondary">
+                Registrarse
+            </a>
+        `;
+    }
+});
+
+function logout() {
+    localStorage.removeItem('userType');
+    localStorage.removeItem('isLoggedIn');
+    window.location.href = 'Home.html';
+}
+
+// Solo para desarrollo - Simular login si no existe
+if (!localStorage.getItem('userType') && confirm('¿Simular inicio de sesión?')) {
+    const type = prompt('Tipo de usuario (1=Cliente, 2=Trabajador, 3=Desempleado)');
+    if (type) {
+        localStorage.setItem('userType', type);
+        localStorage.setItem('isLoggedIn', 'true');
+        window.location.reload();
+    }
+}
+</script>
+
+
+
+
     <script src="Home.js"></script>
+    <script src="auth-check.js"></script>
+    <script src="auth.js"></script>
+    <script src="session-manager.js"></script>
+    
 </body>
 </html>

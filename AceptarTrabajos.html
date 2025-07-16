@@ -187,7 +187,25 @@
         </main>
     </div>
     
+
+<script>
+// Verificación de acceso
+const userType = localStorage.getItem('userType');
+if (userType !== '2') {
+    document.body.innerHTML = `
+        <div style="padding: 20px; text-align: center;">
+            <h1 style="color: red;">Acceso restringido</h1>
+            <p>Solo para trabajadores</p>
+            <a href="Home.html">Volver al inicio</a>
+        </div>
+    `;
+}
+</script>
+
     <script src="BusquedaTrabajos.js"></script>
+    <script src="auth-check.js"></script>
+    <script src="auth.js"></script>
+    <script src="session-manager.js"></script>
 </body>
 </html>
 
