@@ -359,7 +359,7 @@ elif opcion == "2":
             RCMail = input("Mail: ")
             obtener_datos_cliente(RCMail)  
 
-
+        
         
 
         
@@ -367,6 +367,8 @@ elif opcion == "2":
         RCApellido = input("Apellido: ")
         
         RCTel = input("Tel: ")
+
+        
         
         existenteTelCliente = False
 
@@ -387,9 +389,10 @@ elif opcion == "2":
             RCTel = input("Tel: ")
             obtener_datos_cliente_por_tel(RCTel)  
 
+        RCTel = int(RCTel)
 
+        RCBirth = datetime.strptime(input("Nacimiento (YYYY-MM-DD): "), "%Y-%m-%d")
 
-        RCBirth = input("Fecha nacimiento (dejar espacio usando -): ")
         RCContraseña = input("Contraseña: ")
 
         def buscar_archivo_en_c(nombre_archivo):
@@ -433,8 +436,10 @@ elif opcion == "2":
         RCLat = lat
         RCLng = lng
 
+        RCLat = float(RCLat)
+        RCLng = float(RCLng)
        
-        def crear_cliente(nombre, apellido, telefono, cumpleaños, contraseña, mail, latitud , longitud):
+        def crear_cliente(nombre: str, apellido: str, telefono: int, cumpleaños: datetime, contraseña: str, mail: str, latitud: float, longitud: float):
             doc_ref = db.collection("clientes").document(mail)
             doc_ref.set({
                 "nombre": nombre,
@@ -513,8 +518,11 @@ elif opcion == "2":
             print("❌ El teléfono ya está registrado. Ingresá otro teléfono:")
             RTTel = input("Tel: ")
             obtener_datos_trabajador_por_tel(RTTel)  
+        
+        RTTel = int(RTTel)
+        
+        RTBirth = datetime.strptime(input("Nacimiento (YYYY-MM-DD): "), "%Y-%m-%d")
 
-        RTBirth = input("Fecha nacimiento (dejar espacio usando -): ")
         RTContraseña = input("Contraseña: ")
         
         print("Selecciona tu CV en formato PDF")
@@ -660,7 +668,7 @@ elif opcion == "2":
             if esp in especializaciones_booleans:
                 especializaciones_booleans[esp] = True
 
-        def crear_trabajador (nombre, apellido, telefono, cumpleaños, contraseña, mail, cv, Fontanero_Plomero, Electricista, Gasista_matriculado, Albañil, Carpintero, Pintor, Herrero, Techista, Impermeabilizador, Cerrajero, Instalador_de_aires_acondicionados, Instalador_de_alarmas, Instalador_de_cámaras_de_seguridad, Personal_de_limpieza, Limpieza_de_tanques_de_agua, Limpieza_de_vidrios_en_altura, Fumigador, LavadoDeAlfombras_cortinas, Jardinero, Podador_de_árboles, Mantenimiento_de_piletas, Paisajista, Técnico_de_electrodomésticos, Técnico_de_celulares, TécnicoDeComputadoras_laptops, TécnicoDeTelevisores_equiposelectrónicos, Técnico_de_impresoras, InstaladorDeRedes_WiFi, Otro
+        def crear_trabajador (nombre: str, apellido: str, telefono: int, cumpleaños: datetime, contraseña: str, mail: str, cv, Fontanero_Plomero, Electricista, Gasista_matriculado, Albañil, Carpintero, Pintor, Herrero, Techista, Impermeabilizador, Cerrajero, Instalador_de_aires_acondicionados, Instalador_de_alarmas, Instalador_de_cámaras_de_seguridad, Personal_de_limpieza, Limpieza_de_tanques_de_agua, Limpieza_de_vidrios_en_altura, Fumigador, LavadoDeAlfombras_cortinas, Jardinero, Podador_de_árboles, Mantenimiento_de_piletas, Paisajista, Técnico_de_electrodomésticos, Técnico_de_celulares, TécnicoDeComputadoras_laptops, TécnicoDeTelevisores_equiposelectrónicos, Técnico_de_impresoras, InstaladorDeRedes_WiFi, Otro
             ):
             doc_ref = db.collection("trabajadores").document(mail)
             doc_ref.set({
@@ -777,7 +785,7 @@ elif opcion == "2":
         print("¿Terminaste el secundario?")
         print("1. Si")
         print("2. No")
-        RDSecundaria = input("Elegí una opción (1 o 2): ")
+        RDSecundaria = int(input("Elegí una opción (1 o 2): "))
 
         if RDSecundaria == 1:
             RDSecundaria = True
@@ -785,7 +793,9 @@ elif opcion == "2":
         elif RDSecundaria == 2:
             RDSecundaria = False
         
-        RDBirth = input("Fecha nacimiento (dejar espacio usando -): ")
+
+        RDBirth = datetime.strptime(input("Nacimiento (YYYY-MM-DD): "), "%Y-%m-%d")
+
         RDContraseña = input("Contraseña: ")
         print("Selecciona tu CV en formato PDF")
         ruta_archivo = seleccionar_pdf()
