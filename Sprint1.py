@@ -8,7 +8,11 @@ import unidecode
 from datetime import datetime
 import firebase_admin
 from firebase_admin import credentials, firestore
-import re
+import http.server
+import socketserver
+import pytz
+
+
 
 cred = credentials.Certificate("firebase-key.json")
 firebase_admin.initialize_app(cred)
@@ -50,47 +54,63 @@ if opcion == "1":
     profesion = input("Elegí una opción (1, 2 o 3): ")
     
     if profesion == "1":
+
         mail = input("Ingresá tu mail: ")
         contraseña = input("Ingresá tu contraseña: ")
 
-        cursor.execute(
-        'SELECT * FROM trabajador WHERE "Mail" = %s AND "Contraseña" = %s',
-        (mail, contraseña)
-         )
-
-        usuario = cursor.fetchone()
+        trabajadores_ref = db.collection("trabajadores")
+        query = (
+            trabajadores_ref
+            .where("mail", "==", mail)
+            .where("contra", "==", contraseña)
+            .limit(1)
+            .stream()
+        )
+        
+        usuario = None
+        for doc in query:
+            usuario = doc.to_dict()
+            break  
 
         if usuario:
-            nombre = usuario[1]
+            nombre = usuario.get("nombre", "usuario")  
             print("✅ Inicio de sesión exitoso. ¡Bienvenido,", nombre + "!")
         else:
-            print("❌ Datos incorrectos. Por favor, intentá nuevamente.")
-        
+            print("❌ Datos incorrectos. Por favor, intentá nuevamente.")  
 
 
     
     elif profesion == "2":
         mail = input("Ingresá tu mail: ")
         contraseña = input("Ingresá tu contraseña: ")
-
-        cursor.execute(
-        'SELECT * FROM cliente WHERE "Mail" = %s AND "Contraseña" = %s',
-        (mail, contraseña)
-         )
-
-        usuario = cursor.fetchone()
+        
+        clientes_ref = db.collection("clientes")
+        query = (
+            clientes_ref
+            .where("mail", "==", mail)
+            .where("contra", "==", contraseña)
+            .limit(1)
+            .stream()
+        )
+        
+        usuario = None
+        for doc in query:
+            usuario = doc.to_dict()
+            break  
+       
 
         if usuario:
-            nombre = usuario[1]
+            nombre = usuario.get("nombre", "usuario")  
             print("✅ Inicio de sesión exitoso. ¡Bienvenido,", nombre + "!")
-        
+
+            Cmail = mail
 
             print("¿Q queres hacer ahora?")
             print("1. Solicitar CV de trabajador")
             print("2. Contratar a un trabajador para un trabajo")
 
             QHacer = input("Elegí una opción (1 o 2): ")
-            if QHacer == "1":
+            if QHacer == "1": #modifcar para firestore
                 MailTra = input("Ingresá el mail del trabajador: ")
 
                 cursor.execute('SELECT "CV" FROM trabajador WHERE "Mail" = %s', (MailTra,))
@@ -106,7 +126,7 @@ if opcion == "1":
             
             
             elif QHacer == "2":
-                 especializaciones = {
+                 especializaciones_legibles = {
             1: "Fontanero / Plomero",
             2: "Electricista",
             3: "Gasista matriculado",
@@ -135,36 +155,72 @@ if opcion == "1":
             26: "Instalador de redes / WiFi",
             27: "Otro"
             }
+                 
+            especializaciones_firestore = {
+                1: "Fontanero_Plomero",
+                2: "Electricista",
+                3: "Gasista_matriculado",
+                4: "Albanil",
+                5: "Carpintero",
+                6: "Pintor",
+                7: "Herrero",
+                8: "Techista_Impermeabilizador",
+                9: "Cerrajero",
+                10: "Instalador_de_aires_acondicionados",
+                11: "Instalador_de_alarmas_camáras_de_seguridad",
+                12: "Personal_de_limpieza",
+                13: "Limpieza_de_tanques_de_agua",
+                14: "Limpieza_de_vidrios_en_altura",
+                15: "LavadoDeAlfombras_cortinas",
+                16: "Fumigador",
+                17: "Jardinero",
+                18: "Podador_de_árboles",
+                19: "Mantenimiento_de_piletas",
+                20: "Paisajista",
+                21: "Técnico_de_electrodomésticos",
+                22: "Técnico_celulares",
+                23: "TécnicoDeComputadoras_laptops",
+                24: "TécnicoDeTelevisores_equiposelectrónicos",
+                25: "Técnico_de_impresoras",
+                26: "InstaladorDeRedes_WiFi",
+                27: "Otro"
+}
             if QHacer == "2":
                 print("\n🔧 Reparaciones y mantenimiento del hogar")
                 for i in range(1, 12):
-                    print(f"{i}. {especializaciones[i]}")
+                    print(f"{i}. {especializaciones_legibles[i]}")
     
                 print("\n🧼 Limpieza y mantenimiento")
                 for i in range(12, 17):
-                   print(f"{i}. {especializaciones[i]}")
+                   print(f"{i}. {especializaciones_legibles[i]}")
     
                 print("\n🌳 Jardinería y exteriores")
                 for i in range(17, 21):
-                    print(f"{i}. {especializaciones[i]}")
+                    print(f"{i}. {especializaciones_legibles[i]}")
 
                 print("\n🛠️ Servicios técnicos")
                 for i in range(21, 27):
-                    print(f"{i}. {especializaciones[i]}")
+                    print(f"{i}. {especializaciones_legibles[i]}")
 
                 print("\n27. Otro")
 
-                Laburo = input("Que tipo de laburo necesitas hecho: ")
-                Laburo = int(Laburo)
-                LaburoPosta = especializaciones[Laburo]
-
-                query = f'SELECT "mail" FROM especializaciones WHERE "{LaburoPosta}" = %s'
-    
                 try:
-                    cursor.execute(query, (True,))
-                    resultados = cursor.fetchall()
+                    Laburo = int(input("\n¿Qué tipo de laburo necesitás hecho (ingresá el número)? "))
+                    LaburoPosta_legible = especializaciones_legibles[Laburo]
+                    LaburoPosta_firestore = especializaciones_firestore[Laburo]
 
-                    lista_mails = [fila[0] for fila in resultados]
+                    campo_especializacion = LaburoPosta_firestore
+                    
+                    trabajadores_ref = db.collection("trabajadores").where(campo_especializacion, "==", True)
+                    resultados = trabajadores_ref.stream()
+
+                    lista_mails = []
+
+                    for doc in resultados:
+                        data = doc.to_dict()
+                        if "mail" in data:
+                            if data.get("AyudarAOtros") == True:
+                                lista_mails.append(data["mail"])
 
                     if lista_mails:
                         print("\n📧 Trabajadores disponibles:\n")
@@ -172,30 +228,38 @@ if opcion == "1":
                             print(f"{i}. {mail}")
                     else:
                         print("No se encontraron trabajadores con esa especialización.")
-                
+
                 except Exception as e:
-                    print("Ocurrió un error al consultar la base de datos:", e)
+                    print("Ocurrió un error:", e)
 
                 Tmail = input("A cual te gustaria contratar (ingresar el mail del trabajador)?:")
                 
-                cursor.execute('SELECT * FROM trabajador WHERE "Mail" = %s', (Tmail,))
-                existente = cursor.fetchone()
+                trabajador_docs = list(db.collection("trabajadores").where("mail", "==", Tmail).stream())
 
-                while existente == False:
+                while not trabajador_docs:
                     print("❌ El mail no existe. Ingresá otro mail:")
                     Tmail = input("Mail: ")
-                    cursor.execute('SELECT * FROM trabajador WHERE "Mail" = %s', (Tmail,))
-                    existente = cursor.fetchone()
+                    trabajador_docs = list(db.collection("trabajadores").where("mail", "==", Tmail).stream())
 
-                print("Listo, contratase a " + Tmail + " para que te haga un trabajado de " + LaburoPosta)
+                print("✅ Contrataste a " + Tmail + " para que te haga un trabajo de " + LaburoPosta_legible)
 
-                Costo = None
-                ahora = datetime.now()
+                Costo = None  
+                argentina = pytz.timezone("America/Argentina/Buenos_Aires")
+                ahora = datetime.now(argentina)
+                Finalizado = False
 
-                cursor.execute(
-                    'INSERT INTO "historialTC" ("Tmail", "Cmail", "Costo", "HorarioContra") VALUES (%s, %s, %s,%s)',
-                    (Tmail, mail, Costo,ahora)
-                    )
+                try:
+                    db.collection("historialTC").document(Tmail + " - " + Cmail).set({
+                        "Tmail": Tmail,
+                        "Cmail": Cmail,
+                        "Costo": Costo,
+                        "Trabajo": LaburoPosta_legible,
+                        "HorarioContratacion": ahora,
+                        "Finalizado": Finalizado
+                    })
+                    print("📝 Contratación registrada en el historial.")
+                except Exception as e:
+                    print("❌ Error al guardar en Firestore:", e)
                 
 
 
@@ -206,24 +270,35 @@ if opcion == "1":
         mail = input("Ingresá tu mail: ")
         contraseña = input("Ingresá tu contraseña: ")
 
-        cursor.execute(
-        'SELECT * FROM desempleado WHERE "Mail" = %s AND "Contraseña" = %s',
-        (mail, contraseña)
-         )
-
-        usuario = cursor.fetchone()
+        desempleados_ref = db.collection("desempleados")
+        query = (
+            desempleados_ref
+            .where("mail", "==", mail)
+            .where("contra", "==", contraseña)
+            .limit(1)
+            .stream()
+        )
+        
+        usuario = None
+        for doc in query:
+            usuario = doc.to_dict()
+            break  
 
         if usuario:
-            nombre = usuario[1]
+            nombre = usuario.get("nombre", "usuario")  
             print("✅ Inicio de sesión exitoso. ¡Bienvenido,", nombre + "!")
         
+            DMail = mail
 
             print("¿Q queres hacer ahora?")
             print("1. Solicitar mentoria a un trabajador")
 
             QHacer = input("Elegí una opción (1 o 2): ")
 
-            especializaciones = {
+            argentina = pytz.timezone("America/Argentina/Buenos_Aires")
+            ahora = datetime.now(argentina)
+            
+            especializaciones_legibles = {
             1: "Fontanero / Plomero",
             2: "Electricista",
             3: "Gasista matriculado",
@@ -252,67 +327,110 @@ if opcion == "1":
             26: "Instalador de redes / WiFi",
             27: "Otro"
             }
+                 
+            especializaciones_firestore = {
+                1: "Fontanero_Plomero",
+                2: "Electricista",
+                3: "Gasista_matriculado",
+                4: "Albanil",
+                5: "Carpintero",
+                6: "Pintor",
+                7: "Herrero",
+                8: "Techista_Impermeabilizador",
+                9: "Cerrajero",
+                10: "Instalador_de_aires_acondicionados",
+                11: "Instalador_de_alarmas_camáras_de_seguridad",
+                12: "Personal_de_limpieza",
+                13: "Limpieza_de_tanques_de_agua",
+                14: "Limpieza_de_vidrios_en_altura",
+                15: "LavadoDeAlfombras_cortinas",
+                16: "Fumigador",
+                17: "Jardinero",
+                18: "Podador_de_árboles",
+                19: "Mantenimiento_de_piletas",
+                20: "Paisajista",
+                21: "Técnico_de_electrodomésticos",
+                22: "Técnico_celulares",
+                23: "TécnicoDeComputadoras_laptops",
+                24: "TécnicoDeTelevisores_equiposelectrónicos",
+                25: "Técnico_de_impresoras",
+                26: "InstaladorDeRedes_WiFi",
+                27: "Otro"
+            }
+            
             if QHacer == "1":
                 print("\n🔧 Reparaciones y mantenimiento del hogar")
                 for i in range(1, 12):
-                    print(f"{i}. {especializaciones[i]}")
+                    print(f"{i}. {especializaciones_legibles[i]}")
     
                 print("\n🧼 Limpieza y mantenimiento")
                 for i in range(12, 17):
-                   print(f"{i}. {especializaciones[i]}")
+                   print(f"{i}. {especializaciones_legibles[i]}")
     
                 print("\n🌳 Jardinería y exteriores")
                 for i in range(17, 21):
-                    print(f"{i}. {especializaciones[i]}")
+                    print(f"{i}. {especializaciones_legibles[i]}")
 
                 print("\n🛠️ Servicios técnicos")
                 for i in range(21, 27):
-                    print(f"{i}. {especializaciones[i]}")
+                    print(f"{i}. {especializaciones_legibles[i]}")
 
                 print("\n27. Otro")
 
-                Laburo = input("Que tipo de laburo necesitas: ")
-                Laburo = int(Laburo)
-                LaburoPosta = especializaciones[Laburo]
+                
 
-                query = f'SELECT "mail" FROM especializaciones WHERE "{LaburoPosta}" = %s'
-    
                 try:
-                    cursor.execute(query, (True,))
-                    resultados = cursor.fetchall()
+                    Laburo = int(input("\n¿Qué tipo de laburo queres tener (ingresá el número)? "))
+                    LaburoPosta_legible = especializaciones_legibles[Laburo]
+                    LaburoPosta_firestore = especializaciones_firestore[Laburo]
 
-                    lista_mails = [fila[0] for fila in resultados]
+                    campo_especializacion = LaburoPosta_firestore
+                    
+                    trabajadores_ref = db.collection("trabajadores").where(campo_especializacion, "==", True)
+                    resultados = trabajadores_ref.stream()
+
+                    lista_mails = []
+
+                    for doc in resultados:
+                        data = doc.to_dict()
+                        if "mail" in data:
+                            lista_mails.append(data["mail"])
 
                     if lista_mails:
                         print("\n📧 Trabajadores disponibles:\n")
                         for i, mail in enumerate(lista_mails, start=1):
                             print(f"{i}. {mail}")
                     else:
-                        print("No se encontraron trabajadores con esa especialización.")
-                
+                        print("No se encontraron trabajadores con esa especialización dispuestos a enseñar.")
+
                 except Exception as e:
-                    print("Ocurrió un error al consultar la base de datos:", e)
+                    print("Ocurrió un error:", e)
 
                 Tmail = input("A cual te gustaria contratar (ingresar el mail del trabajador)?:")
                 
-                cursor.execute('SELECT * FROM trabajador WHERE "Mail" = %s', (Tmail,))
-                existente = cursor.fetchone()
+                trabajador_docs = list(db.collection("trabajadores").where("mail", "==", Tmail).stream())
 
-                while existente == False:
+                while not trabajador_docs:
                     print("❌ El mail no existe. Ingresá otro mail:")
                     Tmail = input("Mail: ")
-                    cursor.execute('SELECT * FROM trabajador WHERE "Mail" = %s', (Tmail,))
-                    existente = cursor.fetchone()
+                    trabajador_docs = list(db.collection("trabajadores").where("mail", "==", Tmail).stream())
 
-                print("Listo, contratase a " + Tmail + " para que te instruya en " + LaburoPosta)
+                print("✅ Contrataste a " + Tmail + " para que te enseñe a como ser un " + LaburoPosta_legible)
+
 
                 Costo = None
-                ahora = datetime.now()
 
-                cursor.execute(
-                    'INSERT INTO "historialDT" ("Dmail", "Ttrabajador", "Costo", "HoraDeContra") VALUES (%s, %s, %s,%s)',
-                    (mail, Tmail, Costo,ahora)
-                    )
+                try:
+                    db.collection("historialTD").document(Tmail + " - " + DMail).set({
+                        "Tmail": Tmail,
+                        "Dmail": DMail,
+                        "Costo": Costo,
+                        "Trabajo": LaburoPosta_legible,
+                        "HorarioContratacion": ahora,
+                    })
+                    print("📝 Contratación registrada en el historial.")
+                except Exception as e:
+                    print("❌ Error al guardar en Firestore:", e)
                 
 
 
@@ -387,49 +505,66 @@ elif opcion == "2":
 
         RCContraseña = input("Contraseña: ")
 
+        PORT = 8000
+        NOMBRE_ARCHIVO = "coordenadas.txt"
+
+        DIRECTORIO = os.path.dirname(os.path.abspath(__file__))
+
+        class Handler(http.server.SimpleHTTPRequestHandler):
+        
+            def __init__(self, *args, **kwargs):
+                super().__init__(*args, directory=DIRECTORIO, **kwargs)
+
+        def levantar_servidor():
+            with socketserver.TCPServer(("", PORT), Handler) as httpd:
+                print(f"Servidor corriendo en http://localhost:{PORT}")
+                httpd.serve_forever()
+
         def buscar_archivo_en_c(nombre_archivo):
             for raiz, dirs, archivos in os.walk("C:\\"):
                 if nombre_archivo in archivos:
                     return os.path.join(raiz, nombre_archivo)
             return None
-        
 
 
-        nombre_archivo = "coordenadas.txt"
+        threading.Thread(target=levantar_servidor, daemon=True).start()
 
-        webbrowser.open_new(ruta_html)
+        webbrowser.open_new(f"http://localhost:{PORT}/maps.html")
 
+        print(f"Buscando '{NOMBRE_ARCHIVO}' en todo el disco C:\\")
         archivo_coords = None
 
-        print(f"Buscando '{nombre_archivo}' en todo el disco C:\\")
-
         while archivo_coords is None:
-            archivo_coords = buscar_archivo_en_c(nombre_archivo)
+            archivo_coords = buscar_archivo_en_c(NOMBRE_ARCHIVO)
             if archivo_coords is None:
                 print("Archivo no encontrado todavía. Esperando 2 segundos...")
                 time.sleep(2)
 
-        print(f"Archivo encontrado en: {archivo_coords}")
+        print(f"✅ Archivo encontrado en: {archivo_coords}")
 
         with open(archivo_coords, "r") as f:
             contenido = f.read().strip()
 
-        lineas = contenido.split("\n")
-        lat = float(lineas[0].split("=")[1])
-        lng = float(lineas[1].split("=")[1])
-
-        print("Coordenadas recibidas:")
-        print(f"Latitud: {lat}")
-        print(f"Longitud: {lng}")
+        try:
+            lineas = contenido.split("\n")
+            lat = float(lineas[0].split("=")[1])
+            lng = float(lineas[1].split("=")[1])
+        except Exception as e:
+            print("❌ Error al leer el archivo:", e)
+            lat = None
+            lng = None
 
         os.remove(archivo_coords)
-        print("Archivo eliminado.")
+        print("🗑️ Archivo eliminado.")
 
-        RCLat = lat
-        RCLng = lng
-
-        RCLat = float(RCLat)
-        RCLng = float(RCLng)
+        if lat is not None and lng is not None:
+            print("📍 Coordenadas recibidas:")
+            print(f"Latitud: {lat}")
+            print(f"Longitud: {lng}")
+            RCLat = float(lat)
+            RCLng = float(lng)
+        else:
+            print("❌ No se pudieron obtener coordenadas válidas.")
        
         def crear_cliente(nombre: str, apellido: str, telefono: int, cumpleaños: datetime, contraseña: str, mail: str, latitud: float, longitud: float):
             doc_ref = db.collection("clientes").document(mail)
@@ -438,7 +573,7 @@ elif opcion == "2":
                 "apellido": apellido,
                 "tel": telefono,
                 "birth": cumpleaños,
-                "contraseña": contraseña,
+                "contra": contraseña,
                 "mail": mail,
                 "latitud": latitud,
                 "longitud": longitud
@@ -610,10 +745,21 @@ elif opcion == "2":
 
         if __name__ == "__main__":
             main()
+        
+        print("¿Estas dispuesto a enseñarles a otros tus conocimientos en esta area?")
+        print("1. Si")
+        print("2. No")
+        RTCaridad = int(input("Elegí una opción (1 o 2): "))
+
+        if RTCaridad == 1:
+            RTCaridad = True
+
+        elif RTCaridad == 2:
+            RTCaridad = False
 
 
         def crear_trabajador(
-            nombre: str, apellido: str, telefono: int, cumpleaños, contraseña: str, mail: str, cv,
+            nombre: str, apellido: str, telefono: int, cumpleaños, contraseña: str, mail: str, cv, RTCaridad: bool,
             Fontanero_Plomero, Electricista, Gasista_matriculado, Albañil, Carpintero, Pintor,
             Herrero, Techista_Impermeabilizador, Cerrajero, Instalador_de_aires_acondicionados,
             Instalador_de_alarmas_cámaras_de_seguridad, Personal_de_limpieza,
@@ -629,10 +775,10 @@ elif opcion == "2":
                 "apellido": apellido,
                 "tel": telefono,
                 "birth": cumpleaños,
-                "contraseña": contraseña,
+                "contra": contraseña,
                 "mail": mail,
                 "cv": cv,
-
+                "AyudarAOtros": RTCaridad,
                 "Fontanero_Plomero": Fontanero_Plomero,
                 "Electricista": Electricista,
                 "Gasista_matriculado": Gasista_matriculado,
@@ -671,7 +817,7 @@ elif opcion == "2":
             contraseña=RTContraseña,
             mail=RTMail,
             cv=RTCv,
-
+            RTCaridad = RTCaridad,
             Fontanero_Plomero=especializaciones_booleans["fontanero_plomero"],
             Electricista=especializaciones_booleans["electricista"],
             Gasista_matriculado=especializaciones_booleans["gasista_matriculado"],
@@ -742,7 +888,7 @@ elif opcion == "2":
 
         
 
-        RDBirth = datetime.strptime(input("Nacimiento (YYYY-MM-DD): "), "%Y-%m-%d").date()
+        RDBirth = datetime.strptime(input("Nacimiento (YYYY-MM-DD): "), "%Y-%m-%d")
         
         RDContraseña = input("Contraseña: ")
         print("Selecciona tu CV en formato PDF")
@@ -760,7 +906,7 @@ elif opcion == "2":
                 "nombre": Nombre,
                 "apellido": Apellido,
                 "birth": Fecha_de_nacimiento,
-                "contraseña": Contraseña,
+                "contra": Contraseña,
                 "CV": cv,
                 "Secundaria": Secundaria
             })
