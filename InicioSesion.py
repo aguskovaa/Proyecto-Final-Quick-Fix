@@ -3,14 +3,20 @@ import os
 import firebase_admin
 from firebase_admin import credentials, firestore
 
-app = Flask(__name__, template_folder=os.path.abspath(os.path.dirname(__file__)))
+# Configuración CORRECTA de Flask
+app = Flask(__name__)  # Elimina template_folder personalizado
 
 # Inicializar Firebase
 cred = credentials.Certificate("firebase-key.json")
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
-ALLOWED_ROLES = {'clientes', 'trabajadores', 'desempleados'}
+# Actualiza los roles para que coincidan con el HTML
+ROLES_MAPPING = {
+    'cliente': 'clientes',
+    'trabajador': 'trabajadores',
+    'desempleado': 'desempleados'
+}
 
 @app.route('/')
 def index():
@@ -18,32 +24,42 @@ def index():
 
 @app.route('/login', methods=['POST'])
 def login():
-    email = request.form.get('username', '').strip()
-    password = request.form.get('contra', '').strip()  # fijate que en el HTML el name es 'contra'
-    role = request.form.get('rol', '').strip()  # el name en radio buttons es 'rol'
+    email = request.form.get('username', '').strip().lower()
+    password = request.form.get('contra', '').strip()
+    role_form = request.form.get('rol', '').strip()
 
-    if role not in ALLOWED_ROLES:
-        return render_template('Inicio_de_Sesion.html', error="Rol inválido.", color="red")
+    # Validación actualizada
+    if not email or not password or not role_form:
+        return render_template('Inicio_de_Sesion.html', 
+                            error="Por favor, completá todos los campos.",
+                            color="red")
 
-    if not email or not password:
-        return render_template('Inicio_de_Sesion.html', error="Por favor, completá todos los campos.", color="red")
+    if role_form not in ROLES_MAPPING:
+        return render_template('Inicio_de_Sesion.html',
+                            error="Rol inválido seleccionado.",
+                            color="red")
 
     try:
-        # Hacer query filtrando por mail y contra
-        users_ref = db.collection(role)
-        query = users_ref.where("mail", "==", email).where("contra", "==", password).limit(1).stream()
-        usuario = None
-        for doc in query:
-            usuario = doc.to_dict()
-            break
+        firebase_collection = ROLES_MAPPING[role_form]
+        users_ref = db.collection(firebase_collection)
+        query = users_ref.where("mail", "==", email).where("contra", "==", password).limit(1)
+        docs = query.get()
 
-        if usuario:
+        if docs:
+            usuario = docs[0].to_dict()
             nombre = usuario.get('nombre', 'Usuario')
-            return render_template('Inicio_de_Sesion.html', success=f"¡Bienvenido, {nombre}!", color="green")
+            return render_template('Inicio_de_Sesion.html',
+                                success=f"¡Bienvenido, {nombre}!",
+                                color="green")
         else:
-            return render_template('Inicio_de_Sesion.html', error="Usuario o contraseña incorrectos.", color="red")
+            return render_template('Inicio_de_Sesion.html',
+                                error="Usuario o contraseña incorrectos.",
+                                color="red")
     except Exception as e:
-        return render_template('Inicio_de_Sesion.html', error=f"Error: {str(e)}", color="red")
+        print(f"Error: {str(e)}")
+        return render_template('Inicio_de_Sesion.html',
+                            error="Error en el servidor. Intente nuevamente.",
+                            color="red")
 
 if __name__ == '__main__':
     app.run(debug=True)

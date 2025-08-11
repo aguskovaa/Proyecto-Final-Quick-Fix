@@ -86,7 +86,6 @@ function updateUI() {
     }
 }
 
-// Sistema temporal de autenticación para desarrollo
 function setupDevAuth() {
     if (!localStorage.getItem('isLoggedIn') {
         const shouldAuth = confirm('¿Deseas simular inicio de sesión? (Solo para desarrollo)');
