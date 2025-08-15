@@ -55,7 +55,6 @@ def login():
             usuario = docs[0].to_dict()
             nombre = usuario.get('nombre', 'Usuario')
             
-            # Almacenar en sesión (como en tu localStorage)
             session['user_type'] = USER_TYPE_MAPPING[role_form]
             session['is_logged_in'] = True
             session['user_name'] = nombre
