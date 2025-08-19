@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal de Pagos - QuickFix</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #3b82f6;
+            --accent-color: #2563eb;
+            --light-color: #f8fafc;
+            --dark-color: #1e293b;
+            --text-color: #334155;
+            --text-light: #64748b;
+            --white: #ffffff;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --error-color: #ef4444;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .payment-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            width: 100%;
+            max-width: 500px;
+            overflow: hidden;
+        }
+
+        .payment-header {
+            background: var(--primary-color);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .payment-header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .payment-amount {
+            font-size: 42px;
+            font-weight: 700;
+            margin: 20px 0;
+        }
+
+        .payment-service {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 16px;
+        }
+
+        .payment-content {
+            padding: 30px;
+        }
+
+        .payment-methods {
+            margin-bottom: 30px;
+        }
+
+        .method-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 15px;
+        }
+
+        .method-tab {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+        }
+
+        .method-tab.active {
+            border-color: var(--primary-color);
+            background: var(--light-color);
+            transform: translateY(-2px);
+        }
+
+        .method-tab i {
+            font-size: 24px;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .method-content {
+            display: none;
+        }
+
+        .method-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--dark-color);
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .card-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 15px;
+        }
+
+        .platform-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .platform-item {
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+        }
+
+        .platform-item:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+        }
+
+        .platform-item.active {
+            border-color: var(--primary-color);
+            background: var(--light-color);
+        }
+
+        .platform-item img {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+            margin-bottom: 10px;
+        }
+
+        .platform-item i {
+            font-size: 40px;
+            margin-bottom: 10px;
+            color: var(--primary-color);
+        }
+
+        .pay-button {
+            width: 100%;
+            padding: 20px;
+            background: var(--success-color);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-top: 20px;
+        }
+
+        .pay-button:hover {
+            background: #059669;
+        }
+
+        .security-notice {
+            text-align: center;
+            margin-top: 20px;
+            color: var(--text-light);
+            font-size: 14px;
+        }
+
+        .security-notice i {
+            color: var(--success-color);
+            margin-right: 5px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .back-button {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .back-button i {
+            margin-right: 8px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .payment-container {
+                margin: 20px;
+            }
+            
+            .platform-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .card-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="payment-container">
+        <div class="payment-header">
+            <a href="Home.html" class="back-button">
+                <i class="fas fa-arrow-left"></i> Volver
+            </a>
+            <h1>Portal de Pagos</h1>
+            <div class="payment-amount">$1,500.00</div>
+            <div class="payment-service">Servicio de Plomería - Juan Pérez</div>
+        </div>
+
+        <div class="payment-content">
+            <div class="payment-methods">
+                <div class="method-tabs">
+                    <div class="method-tab active" data-method="card">
+                        <i class="fas fa-credit-card"></i>
+                        <span>Tarjeta</span>
+                    </div>
+                    <div class="method-tab" data-method="digital">
+                        <i class="fas fa-mobile-alt"></i>
+                        <span>Billeteras</span>
+                    </div>
+                </div>
+
+                <!-- Método: Tarjeta -->
+                <div class="method-content active" id="card-method">
+                    <div class="form-group">
+                        <label>Número de tarjeta</label>
+                        <input type="text" placeholder="1234 5678 9012 3456" maxlength="19">
+                    </div>
+
+                    <div class="card-row">
+                        <div class="form-group">
+                            <label>Fecha de vencimiento</label>
+                            <input type="text" placeholder="MM/AA" maxlength="5">
+                        </div>
+                        <div class="form-group">
+                            <label>CVV</label>
+                            <input type="text" placeholder="123" maxlength="3">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Nombre del titular</label>
+                        <input type="text" placeholder="Como figura en la tarjeta">
+                    </div>
+
+                    <div class="form-group">
+                        <label>DNI del titular</label>
+                        <input type="text" placeholder="Número de documento">
+                    </div>
+                </div>
+
+                <!-- Método: Billeteras digitales -->
+                <div class="method-content" id="digital-method">
+                    <div class="platform-grid">
+                        <div class="platform-item" data-platform="mercadopago">
+                            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iIzAwQTlFMyIvPjx0ZXh0IHg9IjUwIiB5PSI1MCIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjEyIiBmaWxsPSJ3aGl0ZSI+TVAgPC90ZXh0Pjwvc3ZnPg==" alt="Mercado Pago">
+                            <div>Mercado Pago</div>
+                        </div>
+                        <div class="platform-item" data-platform="modo">
+                            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iIzAwMDAwMCIvPjx0ZXh0IHg9IjUwIiB5PSI1MCIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjEyIiBmaWxsPSJ3aGl0ZSI+TU9ETzwvdGV4dD48L3N2Zz4=" alt="MODO">
+                            <div>MODO</div>
+                        </div>
+                        <div class="platform-item" data-platform="uala">
+                            <i class="fas fa-wallet"></i>
+                            <div>Ualá</div>
+                        </div>
+                        <div class="platform-item" data-platform="mpago">
+                            <i class="fas fa-qrcode"></i>
+                            <div>Mercado Pago QR</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button class="pay-button" onclick="processPayment()">
+                <i class="fas fa-lock"></i> Pagar $1,500.00
+            </button>
+
+            <div class="security-notice">
+                <i class="fas fa-shield-alt"></i>
+                Pagos 100% seguros con encriptación SSL
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Cambiar entre métodos de pago
+        document.querySelectorAll('.method-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Remover activo de todos los tabs
+                document.querySelectorAll('.method-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.method-content').forEach(c => c.classList.remove('active'));
+                
+                // Activar el seleccionado
+                tab.classList.add('active');
+                const method = tab.getAttribute('data-method');
+                document.getElementById(`${method}-method`).classList.add('active');
+            });
+        });
+
+        // Seleccionar plataforma
+        document.querySelectorAll('.platform-item').forEach(item => {
+            item.addEventListener('click', () => {
+                document.querySelectorAll('.platform-item').forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+            });
+        });
+
+        // Formatear número de tarjeta
+        document.querySelector('input[placeholder="1234 5678 9012 3456"]').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            value = value.replace(/(\d{4})/g, '$1 ').trim();
+            e.target.value = value.substring(0, 19);
+        });
+
+        // Formatear fecha de vencimiento
+        document.querySelector('input[placeholder="MM/AA"]').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 2) {
+                value = value.substring(0, 2) + '/' + value.substring(2, 4);
+            }
+            e.target.value = value.substring(0, 5);
+        });
+
+        // Procesar pago
+        function processPayment() {
+            const activeMethod = document.querySelector('.method-tab.active').getAttribute('data-method');
+            
+            if (activeMethod === 'card') {
+                const cardNumber = document.querySelector('input[placeholder="1234 5678 9012 3456"]').value;
+                const expiry = document.querySelector('input[placeholder="MM/AA"]').value;
+                const cvv = document.querySelector('input[placeholder="123"]').value;
+                
+                if (!cardNumber || !expiry || !cvv) {
+                    alert('Por favor, completa todos los campos de la tarjeta');
+                    return;
+                }
+                
+                // Simular procesamiento
+                simulatePayment('tarjeta');
+                
+            } else if (activeMethod === 'digital') {
+                const selectedPlatform = document.querySelector('.platform-item.active');
+                if (!selectedPlatform) {
+                    alert('Por favor, selecciona una plataforma de pago');
+                    return;
+                }
+                
+                const platform = selectedPlatform.getAttribute('data-platform');
+                simulatePayment(platform);
+            }
+        }
+
+        function simulatePayment(method) {
+            const button = document.querySelector('.pay-button');
+            const originalText = button.innerHTML;
+            
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+            button.disabled = true;
+            
+            // Simular delay de pago
+            setTimeout(() => {
+                alert(`¡Pago exitoso con ${method.toUpperCase()}!\nSe ha procesado el pago de $1,500.00`);
+                button.innerHTML = originalText;
+                button.disabled = false;
+                
+                // Redirigir a home después de pago exitoso
+                setTimeout(() => {
+                    window.location.href = 'Home.html';
+                }, 2000);
+                
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

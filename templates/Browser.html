@@ -422,59 +422,95 @@
             </div>
             
             <div class="professionals-list">
-                <!-- Tarjetas generadas dinámicamente desde Flask -->
-                {% if profesionales %}
-                    {% for profesional in profesionales %}
-                    <div class="professional-card">
-                        <div class="card-image">
-                            {% if profesional.get('foto') %}
-                                <img src="{{ profesional.foto }}" alt="Profesional">
-                            {% else %}
-                                <div class="no-image">
-                                    <i class="fas fa-user fa-2x"></i>
-                                </div>
-                            {% endif %}
+                <!-- Tarjeta de profesional 1 -->
+                <div class="professional-card">
+                    <div class="card-image">
+                        <img src="Perfiles/juan.jpg" alt="Profesional">
+                    </div>
+                    <div class="card-content">
+                        <h3>Juan Pérez</h3>
+                        <div class="card-rating">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star-half-alt"></i>
+                            <span>(24 reseñas)</span>
                         </div>
-                        <div class="card-content">
-                            <h3>{{ profesional.nombre }} {{ profesional.apellido }}</h3>
-                            <div class="card-rating">
-                                {% for i in range(5) %}
-                                    {% if i < profesional.rating|int %}
-                                        <i class="fas fa-star"></i>
-                                    {% else %}
-                                        {% if i < profesional.rating %}
-                                            <i class="fas fa-star-half-alt"></i>
-                                        {% else %}
-                                            <i class="far fa-star"></i>
-                                        {% endif %}
-                                    {% endif %}
-                                {% endfor %}
-                                <span>({{ profesional.reseñas }} reseñas)</span>
-                            </div>
-                            <div class="card-specialty">
-                                <i class="fas fa-wrench"></i> {{ profesional.especialidad_principal }}
-                                {% if profesional.especialidades|length > 1 %}
-                                <div class="more-specialties">
-                                    +{{ profesional.especialidades|length - 1 }} especialidades más
-                                </div>
-                                {% endif %}
-                            </div>
-                            <div class="card-location">
-                                <i class="fas fa-map-marker-alt"></i> {{ profesional.ubicacion }}
-                            </div>
-                            <div class="card-price">
-                                Desde: <span>${{ profesional.precio }}</span> por servicio
-                            </div>
+                        <div class="card-specialty">
+                            <i class="fas fa-wrench"></i> Plomero certificado
                         </div>
-                        <div class="card-actions">
-                            <button class="action-button view-profile" onclick="verPerfil('{{ profesional.id }}')">Ver perfil</button>
-                            <button class="action-button hire-now" onclick="contratar('{{ profesional.id }}')">Contratar</button>
+                        <div class="card-location">
+                            <i class="fas fa-map-marker-alt"></i> A 2.5 km de tu ubicación
+                        </div>
+                        <div class="card-price">
+                            Desde: <span>$450</span> por servicio
                         </div>
                     </div>
-                    {% endfor %}
-                {% else %}
-                    <div class="no-results">
-                        <p>No se encontraron profesionales en este momento.</p>
+                    <div class="card-actions">
+                        <button class="action-button view-profile">Ver perfil</button>
+                        <button class="action-button hire-now">Contratar</button>
+                    </div>
+                </div>
+                
+                <!-- Tarjeta de profesional 2 -->
+                <div class="professional-card highlighted">
+                    <div class="card-image">
+                        <img src="Perfiles/maria gordales.jpg" alt="Profesional">
+                    </div>
+                    <div class="card-content">
+                        <h3>María Gordález</h3>
+                        <div class="card-rating">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <span>(56 reseñas)</span>
+                        </div>
+                        <div class="card-specialty">
+                            <i class="fas fa-bolt"></i> Electricista profesional
+                        </div>
+                        <div class="card-location">
+                            <i class="fas fa-map-marker-alt"></i> A 1.8 km de tu ubicación
+                        </div>
+                        <div class="card-price">
+                            Desde: <span>$600</span> por servicio
+                        </div>
+                    </div>
+                    <div class="card-actions">
+                        <button class="action-button view-profile">Ver perfil</button>
+                        <button class="action-button hire-now">Contratar</button>
+                    </div>
+                </div>
+                
+                <!-- Tarjeta de profesional 3 -->
+                <div class="professional-card">
+                    <div class="card-image">
+                        <img src="Perfiles/pela rodriguez.jpg" alt="Profesional">
+                    </div>
+                    <div class="card-content">
+                        <h3>Carlos Rodríguez</h3>
+                        <div class="card-rating">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <span>(12 reseñas)</span>
+                        </div>
+                        <div class="card-specialty">
+                            <i class="fas fa-broom"></i> Servicios de limpieza
+                        </div>
+                        <div class="card-location">
+                            <i class="fas fa-map-marker-alt"></i> A 3.2 km de tu ubicación
+                        </div>
+                        <div class="card-price">
+                            Desde: <span>$350</span> por hora
+                        </div>
+                    </div>
+                    <div class="card-actions">
+                        <button class="action-button view-profile">Ver perfil</button>
+                        <button class="action-button hire-now">Contratar</button>
                     </div>
                 {% endif %}
             </div>
