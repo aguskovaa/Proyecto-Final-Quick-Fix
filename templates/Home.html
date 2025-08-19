@@ -86,7 +86,7 @@
                 <div class="cta-container">
                     {% if session.get('is_logged_in') %}
                         {% if session.get('user_type') == '1' %}
-                            <a href="/browser" class="cta-button primary">
+                            <a href="{{ url_for('browser') }}" class="cta-button primary">
                                 Buscar profesionales <i class="fas fa-arrow-right"></i>
                             </a>
                             <a href="/mis-solicitudes" class="cta-button secondary">
