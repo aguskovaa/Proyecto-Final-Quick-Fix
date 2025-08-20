@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Buscar Profesionales - QuickFix</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='Home.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='estiloBrowser.css') }}">
     <style>
         /* Estilos generales */
         * {
@@ -168,7 +166,7 @@
             background: white;
         }
         
-        /* Tarjetas de profesionales - ESTILO ORIGINAL */
+        /* Tarjetas de profesionales */
         .professionals-list {
             display: grid;
             grid-template-columns: 1fr;
@@ -375,7 +373,7 @@
             <div class="filter-section">
                 <div class="filter-title">Filtrar por:</div>
                 <div class="filter-options">
-                    <select class="filter-select" onchange="filtrarProfesionales()">
+                    <select class="filter-select" id="categoriaFilter">
                         <option>Categoría</option>
                         <option>Plomería</option>
                         <option>Electricidad</option>
@@ -383,21 +381,21 @@
                         <option>Limpieza</option>
                     </select>
                     
-                    <select class="filter-select" onchange="filtrarProfesionales()">
+                    <select class="filter-select" id="calificacionFilter">
                         <option>Calificación</option>
                         <option>5 estrellas</option>
                         <option>4+ estrellas</option>
                         <option>3+ estrellas</option>
                     </select>
                     
-                    <select class="filter-select" onchange="filtrarProfesionales()">
+                    <select class="filter-select" id="precioFilter">
                         <option>Precio</option>
                         <option>Menor a $500</option>
                         <option>$500 - $1000</option>
                         <option>Más de $1000</option>
                     </select>
                     
-                    <select class="filter-select" onchange="filtrarProfesionales()">
+                    <select class="filter-select" id="disponibilidadFilter">
                         <option>Disponibilidad</option>
                         <option>Hoy</option>
                         <option>Esta semana</option>
@@ -422,95 +420,65 @@
             </div>
             
             <div class="professionals-list">
-                <!-- Tarjeta de profesional 1 -->
-                <div class="professional-card">
-                    <div class="card-image">
-                        <img src="Perfiles/juan.jpg" alt="Profesional">
-                    </div>
-                    <div class="card-content">
-                        <h3>Juan Pérez</h3>
-                        <div class="card-rating">
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star-half-alt"></i>
-                            <span>(24 reseñas)</span>
+                <!-- Tarjetas generadas dinámicamente desde Flask -->
+                {% if profesionales %}
+                    {% for profesional in profesionales %}
+                    <div class="professional-card">
+                        <div class="card-image">
+                            {% if profesional.get('foto') %}
+                                <img src="{{ profesional.foto }}" alt="Profesional">
+                            {% else %}
+                                <div class="no-image">
+                                    <i class="fas fa-user fa-2x"></i>
+                                </div>
+                            {% endif %}
                         </div>
-                        <div class="card-specialty">
-                            <i class="fas fa-wrench"></i> Plomero certificado
+                        <div class="card-content">
+                            <h3>{{ profesional.nombre }} {{ profesional.apellido }}</h3>
+                            <div class="card-rating">
+                                {% for i in range(5) %}
+                                    {% if i < profesional.rating|int %}
+                                        <i class="fas fa-star"></i>
+                                    {% else %}
+                                        {% if i < profesional.rating %}
+                                            <i class="fas fa-star-half-alt"></i>
+                                        {% else %}
+                                            <i class="far fa-star"></i>
+                                        {% endif %}
+                                    {% endif %}
+                                {% endfor %}
+                                <span>({{ profesional.reseñas }} reseñas)</span>
+                            </div>
+                            <div class="card-specialty">
+                                <i class="fas fa-wrench"></i> {{ profesional.especialidad_principal }}
+                                {% if profesional.especialidades|length > 1 %}
+                                <div class="more-specialties">
+                                    +{{ profesional.especialidades|length - 1 }} especialidades más
+                                </div>
+                                {% endif %}
+                            </div>
+                            <!-- DIV OCULTO CON TODAS LAS ESPECIALIDADES PARA BÚSQUEDA -->
+                            <div class="all-specialties" style="display: none;">
+                                {% for especialidad in profesional.especialidades %}
+                                    {{ especialidad }}{% if not loop.last %}, {% endif %}
+                                {% endfor %}
+                            </div>
+                            <div class="card-location">
+                                <i class="fas fa-map-marker-alt"></i> {{ profesional.ubicacion }}
+                            </div>
+                            <div class="card-price">
+                                Desde: <span>${{ profesional.precio }}</span> por servicio
+                            </div>
                         </div>
-                        <div class="card-location">
-                            <i class="fas fa-map-marker-alt"></i> A 2.5 km de tu ubicación
-                        </div>
-                        <div class="card-price">
-                            Desde: <span>$450</span> por servicio
-                        </div>
-                    </div>
-                    <div class="card-actions">
-                        <button class="action-button view-profile">Ver perfil</button>
-                        <button class="action-button hire-now">Contratar</button>
-                    </div>
-                </div>
-                
-                <!-- Tarjeta de profesional 2 -->
-                <div class="professional-card highlighted">
-                    <div class="card-image">
-                        <img src="Perfiles/maria gordales.jpg" alt="Profesional">
-                    </div>
-                    <div class="card-content">
-                        <h3>María Gordález</h3>
-                        <div class="card-rating">
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <span>(56 reseñas)</span>
-                        </div>
-                        <div class="card-specialty">
-                            <i class="fas fa-bolt"></i> Electricista profesional
-                        </div>
-                        <div class="card-location">
-                            <i class="fas fa-map-marker-alt"></i> A 1.8 km de tu ubicación
-                        </div>
-                        <div class="card-price">
-                            Desde: <span>$600</span> por servicio
-                        </div>
-                    </div>
-                    <div class="card-actions">
-                        <button class="action-button view-profile">Ver perfil</button>
-                        <button class="action-button hire-now">Contratar</button>
-                    </div>
-                </div>
-                
-                <!-- Tarjeta de profesional 3 -->
-                <div class="professional-card">
-                    <div class="card-image">
-                        <img src="Perfiles/pela rodriguez.jpg" alt="Profesional">
-                    </div>
-                    <div class="card-content">
-                        <h3>Carlos Rodríguez</h3>
-                        <div class="card-rating">
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <span>(12 reseñas)</span>
-                        </div>
-                        <div class="card-specialty">
-                            <i class="fas fa-broom"></i> Servicios de limpieza
-                        </div>
-                        <div class="card-location">
-                            <i class="fas fa-map-marker-alt"></i> A 3.2 km de tu ubicación
-                        </div>
-                        <div class="card-price">
-                            Desde: <span>$350</span> por hora
+                        <div class="card-actions">
+                            <button class="action-button view-profile" onclick="verPerfil('{{ profesional.id }}')">Ver perfil</button>
+                            <button class="action-button hire-now" onclick="contratar('{{ profesional.id }}')">Contratar</button>
                         </div>
                     </div>
-                    <div class="card-actions">
-                        <button class="action-button view-profile">Ver perfil</button>
-                        <button class="action-button hire-now">Contratar</button>
+                    {% endfor %}
+                {% else %}
+                    <div class="no-results">
+                        <p>No se encontraron profesionales en este momento.</p>
                     </div>
                 {% endif %}
             </div>
@@ -528,16 +496,20 @@
     <script>
         function filtrarProfesionales() {
             const searchText = document.getElementById('searchInput').value.toLowerCase();
-            const categoria = document.querySelector('.filter-select:nth-child(1)').value;
+            const categoria = document.getElementById('categoriaFilter').value;
             const cards = document.querySelectorAll('.professional-card');
             
             cards.forEach(card => {
                 const nombre = card.querySelector('h3').textContent.toLowerCase();
-                const especialidad = card.querySelector('.card-specialty').textContent.toLowerCase();
-                const mostrar = (nombre.includes(searchText) || especialidad.includes(searchText)) &&
-                               (categoria === 'Categoría' || especialidad.includes(categoria.toLowerCase()));
+                const todasEspecialidades = card.querySelector('.all-specialties').textContent.toLowerCase();
                 
-                card.style.display = mostrar ? 'flex' : 'none';
+                // Buscar en nombre Y en todas las especialidades
+                const coincideTexto = nombre.includes(searchText) || todasEspecialidades.includes(searchText);
+                
+                // Filtrar por categoría si se seleccionó una específica
+                const coincideCategoria = categoria === 'Categoría' || todasEspecialidades.includes(categoria.toLowerCase());
+                
+                card.style.display = (coincideTexto && coincideCategoria) ? 'flex' : 'none';
             });
         }
         
@@ -555,9 +527,12 @@
             window.location.href = `/contratar/${profesionalId}`;
         }
         
-        // Agregar event listeners a los campos de búsqueda
+        // Agregar event listeners a los campos de búsqueda y filtros
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('searchInput').addEventListener('input', filtrarProfesionales);
+            document.querySelectorAll('.filter-select').forEach(select => {
+                select.addEventListener('change', filtrarProfesionales);
+            });
         });
     </script>
 </body>
