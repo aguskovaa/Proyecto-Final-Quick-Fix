@@ -298,6 +298,15 @@ body {
     transition: all 0.3s;
 }
 
+.action-button.return {
+    background: #ff9800;
+    color: white;
+}
+
+.action-button.return:hover {
+    background: #f57c00;
+}
+
 .view-details {
     background-color: white;
     border: 1px solid var(--accent-color);

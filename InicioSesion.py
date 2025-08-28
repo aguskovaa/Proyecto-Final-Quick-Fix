@@ -333,5 +333,178 @@ def logout():
     session.clear()
     return redirect(url_for('index'))
 
+# Añade estas rutas al final de tu archivo InicioSesion.py
+
+@app.route('/aceptar_trabajo/<trabajo_id>', methods=['POST'])
+def aceptar_trabajo(trabajo_id):
+    if not session.get('is_logged_in') or session.get('user_type') != '2':
+        return jsonify({'success': False, 'message': 'No autorizado'})
+    
+    try:
+        # Actualizar estado a "aceptado"
+        trabajo_ref = db.collection('PendClienteTrabajador').document(trabajo_id)
+        trabajo_ref.update({
+            'estado': 'aceptado',
+            'fecha_actualizacion': datetime.now()
+        })
+        
+        return jsonify({'success': True, 'message': 'Trabajo aceptado con éxito'})
+        
+    except Exception as e:
+        print(f"Error al aceptar trabajo: {str(e)}")
+        return jsonify({'success': False, 'message': 'Error al procesar la solicitud'})
+
+@app.route('/rechazar_trabajo/<trabajo_id>', methods=['POST'])
+def rechazar_trabajo(trabajo_id):
+    if not session.get('is_logged_in') or session.get('user_type') != '2':
+        return jsonify({'success': False, 'message': 'No autorizado'})
+    
+    try:
+        # Actualizar estado a "rechazado"
+        trabajo_ref = db.collection('PendClienteTrabajador').document(trabajo_id)
+        trabajo_ref.update({
+            'estado': 'rechazado',
+            'fecha_actualizacion': datetime.now()
+        })
+        
+        return jsonify({'success': True, 'message': 'Trabajo rechazado'})
+        
+    except Exception as e:
+        print(f"Error al rechazar trabajo: {str(e)}")
+        return jsonify({'success': False, 'message': 'Error al procesar la solicitud'})
+
+@app.route('/devolver_trabajo/<trabajo_id>', methods=['POST'])
+def devolver_trabajo(trabajo_id):
+    if not session.get('is_logged_in') or session.get('user_type') != '2':
+        return jsonify({'success': False, 'message': 'No autorizado'})
+    
+    try:
+        data = request.get_json()
+        especificaciones_trabajador = data.get('especificaciones', '')
+        
+        if not especificaciones_trabajador:
+            return jsonify({'success': False, 'message': 'Debe proporcionar especificaciones'})
+        
+        # Actualizar estado a "devuelto" y agregar especificaciones del trabajador
+        trabajo_ref = db.collection('PendClienteTrabajador').document(trabajo_id)
+        trabajo_ref.update({
+            'estado': 'devuelto',
+            'especificaciones_trabajador': especificaciones_trabajador,
+            'fecha_actualizacion': datetime.now()
+        })
+        
+        return jsonify({'success': True, 'message': 'Trabajo devuelto con especificaciones'})
+        
+    except Exception as e:
+        print(f"Error al devolver trabajo: {str(e)}")
+        return jsonify({'success': False, 'message': 'Error al procesar la solicitud'})
+
+# Añade estas rutas al final de tu archivo InicioSesion.py
+
+@app.route('/mis_solicitudes')
+def mis_solicitudes():
+    if not session.get('is_logged_in'):
+        flash('Debes iniciar sesión primero', 'warning')
+        return redirect(url_for('login'))
+    
+    if session.get('user_type') != '1':
+        flash('Solo los clientes pueden acceder a esta página', 'error')
+        return redirect(url_for('home'))
+    
+    try:
+        # Obtener el ID del cliente actual
+        cliente_id = session.get('user_id')
+        
+        # Buscar todas las solicitudes del cliente en diferentes estados
+        solicitudes_ref = db.collection('PendClienteTrabajador')
+        query = solicitudes_ref.where('cliente_id', '==', cliente_id)
+        docs = query.stream()
+        
+        solicitudes = []
+        for doc in docs:
+            solicitud_data = doc.to_dict()
+            solicitud_data['id'] = doc.id
+            solicitud_data['devuelta'] = solicitud_data.get('estado') == 'devuelto'
+            solicitudes.append(solicitud_data)
+            
+        # Separar en diferentes categorías
+        solicitudes_pendientes = [s for s in solicitudes if s.get('estado') == 'pendiente']
+        solicitudes_aceptadas = [s for s in solicitudes if s.get('estado') == 'aceptado']
+        solicitudes_rechazadas = [s for s in solicitudes if s.get('estado') == 'rechazado']
+        solicitudes_devueltas = [s for s in solicitudes if s.get('estado') == 'devuelto']
+        
+        return render_template('MisSolicitudes.html', 
+                             solicitudes_pendientes=solicitudes_pendientes,
+                             solicitudes_aceptadas=solicitudes_aceptadas,
+                             solicitudes_rechazadas=solicitudes_rechazadas,
+                             solicitudes_devueltas=solicitudes_devueltas)
+        
+    except Exception as e:
+        print(f"Error al obtener solicitudes: {str(e)}")
+        flash('Error al cargar tus solicitudes', 'error')
+        return render_template('MisSolicitudes.html', 
+                             solicitudes_pendientes=[],
+                             solicitudes_aceptadas=[],
+                             solicitudes_rechazadas=[],
+                             solicitudes_devueltas=[])
+
+@app.route('/reenviar_solicitud/<solicitud_id>', methods=['POST'])
+def reenviar_solicitud(solicitud_id):
+    if not session.get('is_logged_in') or session.get('user_type') != '1':
+        return jsonify({'success': False, 'message': 'No autorizado'})
+    
+    try:
+        data = request.get_json()
+        nuevas_especificaciones = data.get('especificaciones', '')
+        
+        if not nuevas_especificaciones:
+            return jsonify({'success': False, 'message': 'Debe proporcionar especificaciones'})
+        
+        # Obtener la solicitud original
+        solicitud_ref = db.collection('PendClienteTrabajador').document(solicitud_id)
+        solicitud = solicitud_ref.get()
+        
+        if not solicitud.exists:
+            return jsonify({'success': False, 'message': 'Solicitud no encontrada'})
+        
+        solicitud_data = solicitud.to_dict()
+        
+        # Crear nueva solicitud basada en la original pero con estado pendiente
+        nueva_solicitud_data = {
+            'cliente_id': solicitud_data['cliente_id'],
+            'cliente_nombre': solicitud_data['cliente_nombre'],
+            'profesional_id': solicitud_data['profesional_id'],
+            'profesional_nombre': solicitud_data['profesional_nombre'],
+            'especializacion': solicitud_data['especializacion'],
+            'fecha_trabajo_propuesta': solicitud_data['fecha_trabajo_propuesta'],
+            'especificaciones': nuevas_especificaciones,
+            'metodo_pago': solicitud_data['metodo_pago'],
+            'ubicacion': solicitud_data['ubicacion'],
+            'estado': 'pendiente',
+            'fecha_solicitud': datetime.now(),
+            'fecha_actualizacion': datetime.now(),
+            'es_reenvio': True,
+            'solicitud_original_id': solicitud_id
+        }
+        
+        # Guardar nueva solicitud
+        pendientes_ref = db.collection('PendClienteTrabajador')
+        nueva_solicitud = pendientes_ref.add(nueva_solicitud_data)
+        
+        # Opcional: marcar la solicitud original como "reenviada"
+        solicitud_ref.update({
+            'reenviada': True,
+            'fecha_reenvio': datetime.now()
+        })
+        
+        return jsonify({
+            'success': True, 
+            'message': 'Solicitud reenviada con éxito'
+        })
+        
+    except Exception as e:
+        print(f"Error al reenviar solicitud: {str(e)}")
+        return jsonify({'success': False, 'message': 'Error al reenviar la solicitud'})
+
 if __name__ == '__main__':
     app.run(debug=True)

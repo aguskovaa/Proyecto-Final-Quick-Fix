@@ -7,6 +7,112 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='Home.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='AceptarTrabajosStyle.css') }}">
+    <style>
+        /* Estilos para el modal de devolución */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #999;
+        }
+        
+        .close-modal:hover {
+            color: #333;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            resize: vertical;
+            min-height: 120px;
+            font-family: inherit;
+        }
+        
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        
+        .btn-cancel {
+            background: #f0f0f0;
+            color: #333;
+        }
+        
+        .btn-submit {
+            background: #4e73df;
+            color: white;
+        }
+        
+        .btn-submit:hover {
+            background: #3a56c4;
+        }
+        
+        .btn-cancel:hover {
+            background: #e0e0e0;
+        }
+    </style>
 </head>
 <body>
     <div class="background-lines">
@@ -74,6 +180,7 @@
                         <button class="action-button view-details" onclick="verDetalles('{{ trabajo.id }}')">Ver detalles</button>
                         <button class="action-button apply-now" onclick="aceptarTrabajo('{{ trabajo.id }}')">Aceptar</button>
                         <button class="action-button reject" onclick="rechazarTrabajo('{{ trabajo.id }}')">Rechazar</button>
+                        <button class="action-button return" onclick="abrirModalDevolucion('{{ trabajo.id }}')">Devolver</button>
                     </div>
                 </div>
                 {% endfor %}
@@ -88,7 +195,42 @@
         </main>
     </div>
 
+    <!-- Modal para devolver trabajo -->
+    <div class="modal-overlay" id="modalDevolucion">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Devolver Solicitud</h3>
+                <button class="close-modal" onclick="cerrarModalDevolucion()">&times;</button>
+            </div>
+            <form id="formDevolucion">
+                <input type="hidden" id="trabajoIdDevolucion" value="">
+                <div class="form-group">
+                    <label for="especificacionesTrabajador">Especificaciones adicionales:</label>
+                    <textarea id="especificacionesTrabajador" placeholder="Explique por qué devuelve la solicitud o qué información adicional necesita del cliente..." required></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-cancel" onclick="cerrarModalDevolucion()">Cancelar</button>
+                    <button type="button" class="btn btn-submit" onclick="devolverTrabajo()">Enviar Devolución</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
+        let trabajoActualId = '';
+        
+        function abrirModalDevolucion(trabajoId) {
+            trabajoActualId = trabajoId;
+            document.getElementById('trabajoIdDevolucion').value = trabajoId;
+            document.getElementById('modalDevolucion').style.display = 'flex';
+            document.getElementById('especificacionesTrabajador').value = '';
+        }
+        
+        function cerrarModalDevolucion() {
+            document.getElementById('modalDevolucion').style.display = 'none';
+            trabajoActualId = '';
+        }
+        
         function aceptarTrabajo(trabajoId) {
             if (confirm('¿Estás seguro de que quieres aceptar este trabajo?')) {
                 fetch(`/aceptar_trabajo/${trabajoId}`, {
@@ -137,12 +279,50 @@
             }
         }
 
+        function devolverTrabajo() {
+            const especificaciones = document.getElementById('especificacionesTrabajador').value.trim();
+            
+            if (!especificaciones) {
+                alert('Por favor, ingrese las especificaciones adicionales.');
+                return;
+            }
+            
+            fetch(`/devolver_trabajo/${trabajoActualId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    especificaciones: especificaciones
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Solicitud devuelta con éxito');
+                    cerrarModalDevolucion();
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al procesar la solicitud');
+            });
+        }
+
         function verDetalles(trabajoId) {
             // Aquí puedes implementar la lógica para ver más detalles
             alert('Funcionalidad de ver detalles en desarrollo para ID: ' + trabajoId);
         }
+        
+        // Cerrar modal al hacer clic fuera del contenido
+        document.getElementById('modalDevolucion').addEventListener('click', function(e) {
+            if (e.target === this) {
+                cerrarModalDevolucion();
+            }
+        });
     </script>
-
-    
 </body>
 </html>

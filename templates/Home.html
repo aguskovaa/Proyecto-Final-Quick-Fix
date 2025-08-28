@@ -89,7 +89,7 @@
                             <a href="{{ url_for('browser') }}" class="cta-button primary">
                                 Buscar profesionales <i class="fas fa-arrow-right"></i>
                             </a>
-                            <a href="/mis-solicitudes" class="cta-button secondary">
+                            <a href="{{ url_for('mis_solicitudes') }}" class="cta-button secondary">
                                 Mis solicitudes
                             </a>
                        {% elif session.get('user_type') == '2' %}
