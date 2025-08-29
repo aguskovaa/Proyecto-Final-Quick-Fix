@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mis Solicitudes - QuickFix</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='Home.css') }}">
     <style>
         * {
             margin: 0;
@@ -224,8 +223,6 @@
             margin-bottom: 10px;
             color: #6c757d;
         }
-        
-        /* Modal styles */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -237,14 +234,17 @@
             z-index: 1000;
             justify-content: center;
             align-items: center;
+            padding: 20px;
         }
         
         .modal-content {
             background: white;
             padding: 25px;
-            border-radius: 10px;
-            width: 90%;
-            max-width: 500px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
         }
         
         .modal-header {
@@ -257,15 +257,15 @@
         }
         
         .modal-title {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #333;
+            font-size: 20px;
+            font-weight: 600;
+            color: #2c3e50;
         }
         
         .close-modal {
             background: none;
             border: none;
-            font-size: 1.5rem;
+            font-size: 24px;
             cursor: pointer;
             color: #999;
         }
@@ -278,36 +278,74 @@
             display: block;
             margin-bottom: 8px;
             font-weight: 500;
-            color: #333;
+            color: #2c3e50;
         }
         
+        .form-group input,
+        .form-group select,
         .form-group textarea {
             width: 100%;
             padding: 12px;
             border: 1px solid #ddd;
-            border-radius: 5px;
-            resize: vertical;
-            min-height: 120px;
+            border-radius: 6px;
             font-family: inherit;
+            font-size: 14px;
         }
         
-        .modal-actions {
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .form-actions {
             display: flex;
             justify-content: flex-end;
             gap: 10px;
+            margin-top: 25px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
         }
         
-        .especificaciones-trabajador {
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 14px;
+            transition: background 0.3s ease;
+        }
+        
+        .btn-cancel {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-cancel:hover {
+            background: #5a6268;
+        }
+        
+        .btn-submit {
+            background: #4e73df;
+            color: white;
+        }
+        
+        .btn-submit:hover {
+            background: #3a56c4;
+        }
+        
+        .comentarios-profesional {
             background: #f8f9fa;
             padding: 15px;
-            border-radius: 5px;
-            margin-top: 15px;
-            border-left: 4px solid #4e73df;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #ffc107;
         }
         
-        .especificaciones-trabajador h4 {
+        .comentarios-profesional h4 {
             margin-bottom: 10px;
-            color: #4e73df;
+            color: #856404;
+            font-size: 14px;
         }
     </style>
 </head>
@@ -315,19 +353,13 @@
     <div class="container">
         <header class="header">
             <div class="logo">Quick<span>Fix</span></div>
-            <nav class="nav">
-                <a href="{{ url_for('home') }}" class="nav-item">Inicio</a>
-                <a href="{{ url_for('browser') }}" class="nav-item">Buscar Profesionales</a>
-                <a href="{{ url_for('mis_solicitudes') }}" class="nav-item active">Mis Solicitudes</a>
-                <a href="#" class="nav-item">Ayuda</a>
-                <a class="nav-item" href="{{ url_for('logout') }}"><i class="fas fa-user"></i> Cerrar Sesión</a>
-            </nav>
+            <a href="{{ url_for('home') }}" class="back-button">
+                <i class="fas fa-arrow-left"></i> Volver al Inicio
+            </a>
         </header>
         
-        <a href="{{ url_for('home') }}" class="back-button"><i class="fas fa-arrow-left"></i> Volver al Inicio</a>
-        
         <main class="main-content">
-            <h2 class="section-title">Mis Solicitudes</h2>
+            <h1 class="section-title">Mis Solicitudes</h1>
             
             <!-- Solicitudes Pendientes -->
             <h3>Solicitudes Pendientes ({{ solicitudes_pendientes|length }})</h3>
@@ -408,156 +440,179 @@
             </div>
             
             <!-- Solicitudes Devueltas -->
-            <h3>Solicitudes Devueltas ({{ solicitudes_devueltas|length }})</h3>
-            <div class="solicitudes-grid">
-                {% if solicitudes_devueltas %}
-                    {% for solicitud in solicitudes_devueltas %}
-                    <div class="solicitud-card">
-                        <div class="solicitud-header">
-                            <h4 class="solicitud-title">Solicitud de {{ solicitud.especializacion }}</h4>
-                            <span class="estado-badge estado-devuelto">Devuelta</span>
-                        </div>
-                        <div class="solicitud-info">
-                            <div class="info-item">
-                                <span class="info-label">Profesional:</span>
-                                <span class="info-value">{{ solicitud.profesional_nombre }}</span>
+            <div class="solicitudes-section">
+                <h2 class="section-subtitle">Solicitudes Devueltas ({{ solicitudes_devueltas|length }})</h2>
+                <div class="solicitudes-grid">
+                    {% if solicitudes_devueltas %}
+                        {% for solicitud in solicitudes_devueltas %}
+                        <div class="solicitud-card">
+                            <div class="solicitud-header">
+                                <h3 class="solicitud-title">{{ solicitud.especializacion }}</h3>
+                                <span class="estado-badge estado-devuelto">Devuelta</span>
                             </div>
-                            <div class="info-item">
-                                <span class="info-label">Fecha propuesta:</span>
-                                <span class="info-value">{{ solicitud.fecha_trabajo_propuesta }}</span>
+                            <div class="solicitud-info">
+                                <div class="info-item">
+                                    <span class="info-label">Profesional:</span>
+                                    <span class="info-value">{{ solicitud.profesional_nombre }}</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Fecha:</span>
+                                    <span class="info-value">{{ solicitud.fecha_trabajo_propuesta }}</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Ubicación:</span>
+                                    <span class="info-value">{{ solicitud.ubicacion }}</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Especificaciones originales:</span>
+                                    <span class="info-value">{{ solicitud.especificaciones }}</span>
+                                </div>
                             </div>
-                            <div class="info-item">
-                                <span class="info-label">Ubicación:</span>
-                                <span class="info-value">{{ solicitud.ubicacion }}</span>
-                            </div>
+                            
                             {% if solicitud.especificaciones_trabajador %}
                             <div class="especificaciones-trabajador">
                                 <h4>Comentarios del profesional:</h4>
                                 <p>{{ solicitud.especificaciones_trabajador }}</p>
                             </div>
                             {% endif %}
-                        </div>
-                        <div class="solicitud-actions">
-                            <button class="btn btn-warning" onclick="abrirModalReenvio('{{ solicitud.id }}', `{{ solicitud.especificaciones_trabajador }}`)">
-                                Reenviar Solicitud
-                            </button>
-                        </div>
-                    </div>
-                    {% endfor %}
-                {% else %}
-                    <div class="empty-state">
-                        <i class="fas fa-redo"></i>
-                        <h3>No tienes solicitudes devueltas</h3>
-                        <p>Las solicitudes que los profesionales devuelvan con comentarios aparecerán aquí.</p>
-                    </div>
-                {% endif %}
-            </div>
-            
-            <!-- Solicitudes Rechazadas -->
-            <h3>Solicitudes Rechazadas ({{ solicitudes_rechazadas|length }})</h3>
-            <div class="solicitudes-grid">
-                {% if solicitudes_rechazadas %}
-                    {% for solicitud in solicitudes_rechazadas %}
-                    <div class="solicitud-card">
-                        <div class="solicitud-header">
-                            <h4 class="solicitud-title">Solicitud de {{ solicitud.especializacion }}</h4>
-                            <span class="estado-badge estado-rechazado">Rechazada</span>
-                        </div>
-                        <div class="solicitud-info">
-                            <div class="info-item">
-                                <span class="info-label">Profesional:</span>
-                                <span class="info-value">{{ solicitud.profesional_nombre }}</span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">Fecha propuesta:</span>
-                                <span class="info-value">{{ solicitud.fecha_trabajo_propuesta }}</span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">Ubicación:</span>
-                                <span class="info-value">{{ solicitud.ubicacion }}</span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">Estado:</span>
-                                <span class="info-value">El profesional rechazó tu solicitud</span>
+                            
+                            <div class="solicitud-actions">
+                                <button class="btn btn-warning"
+        data-id="{{ solicitud.id }}"
+        data-especializacion="{{ solicitud.especializacion }}"
+        data-fecha="{{ solicitud.fecha_trabajo_propuesta }}"
+        data-especificaciones="{{ solicitud.especificaciones }}"
+        data-metodopago="{{ solicitud.metodo_pago }}"
+        data-ubicacion="{{ solicitud.ubicacion }}"
+        data-comentarios="{{ solicitud.especificaciones_trabajador }}"
+        onclick="abrirModalReenvio(this)">
+    <i class="fas fa-redo"></i> Reenviar Solicitud
+</button>
+
                             </div>
                         </div>
-                    </div>
-                    {% endfor %}
-                {% else %}
-                    <div class="empty-state">
-                        <i class="fas fa-times-circle"></i>
-                        <h3>No tienes solicitudes rechazadas</h3>
-                        <p>Las solicitudes que sean rechazadas por los profesionales aparecerán aquí.</p>
-                    </div>
-                {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-redo"></i>
+                            <h3>No tienes solicitudes devueltas</h3>
+                        </div>
+                    {% endif %}
+                </div>
             </div>
         </main>
     </div>
 
-    <!-- Modal para reenviar solicitud -->
+    <!-- Modal de reenvío completo -->
     <div class="modal-overlay" id="modalReenvio">
         <div class="modal-content">
             <div class="modal-header">
                 <h3 class="modal-title">Reenviar Solicitud</h3>
                 <button class="close-modal" onclick="cerrarModalReenvio()">&times;</button>
             </div>
+            
+            <div id="comentariosContainer" class="comentarios-profesional" style="display: none;">
+                <h4>Comentarios del profesional:</h4>
+                <p id="comentariosProfesional"></p>
+            </div>
+            
             <form id="formReenvio">
                 <input type="hidden" id="solicitudIdReenvio" value="">
+                
                 <div class="form-group">
-                    <label for="nuevasEspecificaciones">Nuevas especificaciones:</label>
-                    <textarea id="nuevasEspecificaciones" placeholder="Modifica las especificaciones según los comentarios del profesional..." required></textarea>
+                    <label for="especializacion">Especialización *</label>
+                    <input type="text" id="especializacion" name="especializacion" required>
                 </div>
-                <div id="comentariosProfesional" class="form-group" style="display: none;">
-                    <label>Comentarios del profesional:</label>
-                    <div id="comentariosContent" style="background: #f8f9fa; padding: 10px; border-radius: 5px; margin-top: 5px;"></div>
+                
+                <div class="form-group">
+                    <label for="fechaTrabajo">Fecha de realización *</label>
+                    <input type="datetime-local" id="fechaTrabajo" name="fechaTrabajo" required>
                 </div>
-                <div class="modal-actions">
-                    <button type="button" class="btn btn-secondary" onclick="cerrarModalReenvio()">Cancelar</button>
-                    <button type="button" class="btn btn-primary" onclick="reenviarSolicitud()">Reenviar</button>
+                
+                <div class="form-group">
+                    <label for="especificaciones">Especificaciones del trabajo *</label>
+                    <textarea id="especificaciones" name="especificaciones" placeholder="Describí en detalle el trabajo a realizar..." required></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="metodoPago">Método de pago *</label>
+                    <select id="metodoPago" name="metodoPago" required>
+                        <option value="">Seleccione un método</option>
+                        <option value="efectivo">Efectivo</option>
+                        <option value="mercadopago">Mercado Pago</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="ubicacion">Ubicación exacta *</label>
+                    <input type="text" id="ubicacion" name="ubicacion" placeholder="Dirección completa..." required>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-cancel" onclick="cerrarModalReenvio()">Cancelar</button>
+                    <button type="button" class="btn btn-submit" onclick="reenviarSolicitud()">Reenviar Solicitud</button>
                 </div>
             </form>
         </div>
     </div>
 
     <script>
-        let solicitudActualId = '';
+        let solicitudActual = null;
         
-        function abrirModalReenvio(solicitudId, comentariosProfesional) {
-            solicitudActualId = solicitudId;
-            document.getElementById('solicitudIdReenvio').value = solicitudId;
-            document.getElementById('nuevasEspecificaciones').value = '';
-            
-            if (comentariosProfesional) {
-                document.getElementById('comentariosProfesional').style.display = 'block';
-                document.getElementById('comentariosContent').textContent = comentariosProfesional;
-            } else {
-                document.getElementById('comentariosProfesional').style.display = 'none';
-            }
-            
-            document.getElementById('modalReenvio').style.display = 'flex';
-        }
+        function abrirModalReenvio(button) {
+    const solicitudId = button.getAttribute("data-id");
+    document.getElementById("solicitudIdReenvio").value = solicitudId;
+
+    document.getElementById("especializacion").value = button.getAttribute("data-especializacion") || '';
+    document.getElementById("fechaTrabajo").value = button.getAttribute("data-fecha") || '';
+    document.getElementById("especificaciones").value = button.getAttribute("data-especificaciones") || '';
+    document.getElementById("metodoPago").value = button.getAttribute("data-metodopago") || '';
+    document.getElementById("ubicacion").value = button.getAttribute("data-ubicacion") || '';
+
+    // Comentarios del profesional
+    const comentarios = button.getAttribute("data-comentarios");
+    const comentariosContainer = document.getElementById("comentariosContainer");
+    const comentariosProfesional = document.getElementById("comentariosProfesional");
+
+    if (comentarios) {
+        comentariosProfesional.textContent = comentarios;
+        comentariosContainer.style.display = "block";
+    } else {
+        comentariosContainer.style.display = "none";
+    }
+
+    // Mostrar modal
+    document.getElementById("modalReenvio").style.display = "flex";
+}
+
         
         function cerrarModalReenvio() {
             document.getElementById('modalReenvio').style.display = 'none';
-            solicitudActualId = '';
+            solicitudActual = null;
         }
         
         function reenviarSolicitud() {
-            const nuevasEspecificaciones = document.getElementById('nuevasEspecificaciones').value.trim();
+            const formData = {
+                especializacion: document.getElementById('especializacion').value.trim(),
+                fechaTrabajo: document.getElementById('fechaTrabajo').value,
+                especificaciones: document.getElementById('especificaciones').value.trim(),
+                metodoPago: document.getElementById('metodoPago').value,
+                ubicacion: document.getElementById('ubicacion').value.trim()
+            };
             
-            if (!nuevasEspecificaciones) {
-                alert('Por favor, ingrese las nuevas especificaciones.');
+            // Validar campos obligatorios
+            if (!formData.especializacion || !formData.fechaTrabajo || 
+                !formData.especificaciones || !formData.metodoPago || !formData.ubicacion) {
+                alert('Por favor, complete todos los campos obligatorios.');
                 return;
             }
             
-            fetch(`/reenviar_solicitud/${solicitudActualId}`, {
+            fetch(`/reenviar_solicitud/${document.getElementById('solicitudIdReenvio').value}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({
-                    especificaciones: nuevasEspecificaciones
-                })
+                body: JSON.stringify(formData)
             })
             .then(response => response.json())
             .then(data => {
@@ -579,6 +634,13 @@
         document.getElementById('modalReenvio').addEventListener('click', function(e) {
             if (e.target === this) {
                 cerrarModalReenvio();
+            }
+        });
+        
+        // Prevenir el envío del formulario al presionar Enter
+        document.getElementById('formReenvio').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
             }
         });
     </script>
