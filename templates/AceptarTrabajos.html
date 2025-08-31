@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='Home.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='AceptarTrabajosStyle.css') }}">
     <style>
-        /* Estilos para el modal de devolución */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -25,11 +24,9 @@
         .modal-content {
             background: white;
             padding: 25px;
-            border-radius: 10px;
+            border-radius: 12px;
             width: 90%;
             max-width: 500px;
-            max-height: 80vh;
-            overflow-y: auto;
         }
         
         .modal-header {
@@ -42,21 +39,17 @@
         }
         
         .modal-title {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #333;
+            font-size: 20px;
+            font-weight: 600;
+            color: #2c3e50;
         }
         
         .close-modal {
             background: none;
             border: none;
-            font-size: 1.5rem;
+            font-size: 24px;
             cursor: pointer;
             color: #999;
-        }
-        
-        .close-modal:hover {
-            color: #333;
         }
         
         .form-group {
@@ -67,14 +60,14 @@
             display: block;
             margin-bottom: 8px;
             font-weight: 500;
-            color: #333;
+            color: #2c3e50;
         }
         
         .form-group textarea {
             width: 100%;
             padding: 12px;
             border: 1px solid #ddd;
-            border-radius: 5px;
+            border-radius: 6px;
             resize: vertical;
             min-height: 120px;
             font-family: inherit;
@@ -90,14 +83,18 @@
         .btn {
             padding: 10px 20px;
             border: none;
-            border-radius: 5px;
+            border-radius: 6px;
             cursor: pointer;
             font-weight: 500;
         }
         
         .btn-cancel {
-            background: #f0f0f0;
-            color: #333;
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-cancel:hover {
+            background: #5a6268;
         }
         
         .btn-submit {
@@ -107,10 +104,6 @@
         
         .btn-submit:hover {
             background: #3a56c4;
-        }
-        
-        .btn-cancel:hover {
-            background: #e0e0e0;
         }
     </style>
 </head>
@@ -222,8 +215,8 @@
         function abrirModalDevolucion(trabajoId) {
             trabajoActualId = trabajoId;
             document.getElementById('trabajoIdDevolucion').value = trabajoId;
-            document.getElementById('modalDevolucion').style.display = 'flex';
             document.getElementById('especificacionesTrabajador').value = '';
+            document.getElementById('modalDevolucion').style.display = 'flex';
         }
         
         function cerrarModalDevolucion() {
@@ -313,7 +306,6 @@
         }
 
         function verDetalles(trabajoId) {
-            // Aquí puedes implementar la lógica para ver más detalles
             alert('Funcionalidad de ver detalles en desarrollo para ID: ' + trabajoId);
         }
         
