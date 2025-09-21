@@ -196,45 +196,43 @@ def trabajos():
 def mis_solicitudes():
     if not session.get('is_logged_in'):
         flash('Debes iniciar sesión primero', 'warning')
-        return redirect(url_for('login'))
+        return re|direct(url_for('login'))
     
     if session.get('user_type') != '1':
         flash('Solo los clientes pueden acceder a esta página', 'error')
         return redirect(url_for('home'))
     
-    try:
-        cliente_id = session.get('user_id')
-        solicitudes_ref = db.collection('PendClienteTrabajador')
-        query = solicitudes_ref.where('cliente_id', '==', cliente_id)
-        docs = query.stream()
+    cliente_id = session.get('user_id')
+    
+    solicitudes_ref = db.collection('PendClienteTrabajador')
+    solicitudes_docs = solicitudes_ref.where('cliente_id', '==', cliente_id).stream()
+    
+    solicitudes = [doc.to_dict() for doc in solicitudes_docs]
+
+    solicitudes_pendientes = [s for s in solicitudes if s.get('estado') == 'pendiente']
+    solicitudes_aceptadas = [s for s in solicitudes if s.get('estado') == 'aceptado']
+    solicitudes_rechazadas = [s for s in solicitudes if s.get('estado') == 'rechazado']
+    solicitudes_devueltas = [s for s in solicitudes if s.get('estado') == 'devuelto']
+
+    finalizados_ref = db.collection('TrabajosFinalizados')
+    finalizados_docs = finalizados_ref.where('cliente_id', '==', cliente_id).stream()
+    solicitudes_finalizadas = [doc.to_dict() for doc in finalizados_docs]
+
+    cancelados_ref = db.collection('TrabajosCancelados')
+    cancelados_docs = cancelados_ref.where('cliente_id', '==', cliente_id).stream()
+    solicitudes_canceladas = [doc.to_dict() for doc in cancelados_docs]
+
+    return render_template('MisSolicitudes.html', 
+                           solicitudes_pendientes=solicitudes_pendientes,
+                           solicitudes_aceptadas=solicitudes_aceptadas,
+                           solicitudes_rechazadas=solicitudes_rechazadas,
+                           solicitudes_devueltas=solicitudes_devueltas,
+                           solicitudes_finalizadas=solicitudes_finalizadas,
+                           solicitudes_canceladas=solicitudes_canceladas,
+                           especialidades_predefinidas=ESPECIALIDADES_PREDEFINIDAS)
+
         
-        solicitudes = []
-        for doc in docs:
-            solicitud_data = doc.to_dict()
-            solicitud_data['id'] = doc.id
-            solicitudes.append(solicitud_data)
-            
-        solicitudes_pendientes = [s for s in solicitudes if s.get('estado') == 'pendiente']
-        solicitudes_aceptadas = [s for s in solicitudes if s.get('estado') == 'aceptado']
-        solicitudes_rechazadas = [s for s in solicitudes if s.get('estado') == 'rechazado']
-        solicitudes_devueltas = [s for s in solicitudes if s.get('estado') == 'devuelto']
-        
-        return render_template('MisSolicitudes.html', 
-                             solicitudes_pendientes=solicitudes_pendientes,
-                             solicitudes_aceptadas=solicitudes_aceptadas,
-                             solicitudes_rechazadas=solicitudes_rechazadas,
-                             solicitudes_devueltas=solicitudes_devueltas,
-                             especialidades_predefinidas=ESPECIALIDADES_PREDEFINIDAS)
-        
-    except Exception as e:
-        print(f"Error al obtener solicitudes: {str(e)}")
-        flash('Error al cargar tus solicitudes', 'error')
-        return render_template('MisSolicitudes.html', 
-                             solicitudes_pendientes=[],
-                             solicitudes_aceptadas=[],
-                             solicitudes_rechazadas=[],
-                             solicitudes_devueltas=[],
-                             especialidades_predefinidas=ESPECIALIDADES_PREDEFINIDAS)
+   
 
 @app.route('/aceptar_trabajo/<trabajo_id>', methods=['POST'])
 def aceptar_trabajo(trabajo_id):
@@ -425,6 +423,140 @@ def obtener_solicitud(solicitud_id):
 def logout():
     session.clear()
     return redirect(url_for('index'))
+
+@app.route('/trabajos_pendientes')
+def trabajos_pendientes():
+    if not session.get('is_logged_in'):
+        flash('Debes iniciar sesión primero', 'warning')
+        return redirect(url_for('login'))
+    
+    if session.get('user_type') != '2':
+        flash('Solo los trabajadores pueden acceder a esta página', 'error')
+        return redirect(url_for('home'))
+    
+    try:
+        trabajador_id = session.get('user_id')
+        
+        # Obtener trabajos aceptados pero no finalizados
+        trabajos_ref = db.collection('PendClienteTrabajador')
+        query = trabajos_ref.where('profesional_id', '==', trabajador_id).where('estado', '==', 'aceptado')
+        docs = query.stream()
+        
+        trabajos_aceptados = []
+        for doc in docs:
+            trabajo_data = doc.to_dict()
+            trabajo_data['id'] = doc.id
+            
+            # Verificar si existe un registro en TrabajosFinalizados
+            finalizado_ref = db.collection('TrabajosFinalizados').document(doc.id)
+            finalizado_doc = finalizado_ref.get()
+            
+            if not finalizado_doc.exists:
+                trabajos_aceptados.append(trabajo_data)
+        
+        return render_template('TrabajosPendientes.html', trabajos=trabajos_aceptados)
+        
+    except Exception as e:
+        print(f"Error al obtener trabajos pendientes: {str(e)}")
+        flash('Error al cargar los trabajos pendientes', 'error')
+        return render_template('TrabajosPendientes.html', trabajos=[])
+
+@app.route('/finalizar_trabajo/<trabajo_id>', methods=['POST'])
+def finalizar_trabajo(trabajo_id):
+    if not session.get('is_logged_in') or session.get('user_type') != '2':
+        return jsonify({'success': False, 'message': 'No autorizado'})
+    
+    try:
+        # Obtener datos del trabajo
+        trabajo_ref = db.collection('PendClienteTrabajador').document(trabajo_id)
+        trabajo = trabajo_ref.get()
+        
+        if not trabajo.exists:
+            return jsonify({'success': False, 'message': 'Trabajo no encontrado'})
+        
+        trabajo_data = trabajo.to_dict()
+        
+        # Crear registro en TrabajosFinalizados
+        finalizado_data = {
+            'trabajo_id': trabajo_id,
+            'cliente_id': trabajo_data.get('cliente_id'),
+            'cliente_nombre': trabajo_data.get('cliente_nombre'),
+            'profesional_id': session.get('user_id'),
+            'profesional_nombre': trabajo_data.get('profesional_nombre'),
+            'especializacion': trabajo_data.get('especializacion'),
+            'fecha_trabajo_propuesta': trabajo_data.get('fecha_trabajo_propuesta'),
+            'fecha_finalizacion': datetime.now(),
+            'especificaciones': trabajo_data.get('especificaciones'),
+            'metodo_pago': trabajo_data.get('metodo_pago'),
+            'ubicacion': trabajo_data.get('ubicacion'),
+            'estado': 'finalizado'
+        }
+        
+        db.collection('TrabajosFinalizados').document(trabajo_id).set(finalizado_data)
+        
+        # Actualizar estado en PendClienteTrabajador
+        trabajo_ref.update({
+            'estado': 'finalizado',
+            'fecha_finalizacion': datetime.now()
+        })
+        
+        return jsonify({'success': True, 'message': 'Trabajo marcado como finalizado'})
+        
+    except Exception as e:
+        print(f"Error al finalizar trabajo: {str(e)}")
+        return jsonify({'success': False, 'message': 'Error al procesar la solicitud'})
+
+@app.route('/cancelar_trabajo/<trabajo_id>', methods=['POST'])
+def cancelar_trabajo(trabajo_id):
+    if not session.get('is_logged_in') or session.get('user_type') != '2':
+        return jsonify({'success': False, 'message': 'No autorizado'})
+    
+    try:
+        data = request.get_json()
+        motivo_cancelacion = data.get('motivo', '')
+        
+        # Obtener datos del trabajo
+        trabajo_ref = db.collection('PendClienteTrabajador').document(trabajo_id)
+        trabajo = trabajo_ref.get()
+        
+        if not trabajo.exists:
+            return jsonify({'success': False, 'message': 'Trabajo no encontrado'})
+        
+        trabajo_data = trabajo.to_dict()
+        
+        # Crear registro en TrabajosCancelados
+        cancelado_data = {
+            'trabajo_id': trabajo_id,
+            'cliente_id': trabajo_data.get('cliente_id'),
+            'cliente_nombre': trabajo_data.get('cliente_nombre'),
+            'profesional_id': session.get('user_id'),
+            'profesional_nombre': trabajo_data.get('profesional_nombre'),
+            'especializacion': trabajo_data.get('especializacion'),
+            'fecha_trabajo_propuesta': trabajo_data.get('fecha_trabajo_propuesta'),
+            'fecha_cancelacion': datetime.now(),
+            'especificaciones': trabajo_data.get('especificaciones'),
+            'metodo_pago': trabajo_data.get('metodo_pago'),
+            'ubicacion': trabajo_data.get('ubicacion'),
+            'motivo_cancelacion': motivo_cancelacion,
+            'cancelado_por': 'trabajador',
+            'estado': 'cancelado'
+        }
+        
+        db.collection('TrabajosCancelados').document(trabajo_id).set(cancelado_data)
+        
+        # Actualizar estado en PendClienteTrabajador
+        trabajo_ref.update({
+            'estado': 'cancelado',
+            'motivo_cancelacion': motivo_cancelacion,
+            'fecha_cancelacion': datetime.now(),
+            'cancelado_por': 'trabajador'
+        })
+        
+        return jsonify({'success': True, 'message': 'Trabajo cancelado correctamente'})
+        
+    except Exception as e:
+        print(f"Error al cancelar trabajo: {str(e)}")
+        return jsonify({'success': False, 'message': 'Error al procesar la solicitud'})
 
 if __name__ == '__main__':
     app.run(debug=True)

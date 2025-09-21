@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trabajos Pendientes - QuickFix</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='TrabajosPendientes.css') }}">
+</head>
+<body>
+    <div class="background-lines">
+        <div class="line line-1"></div>
+        <div class="line line-2"></div>
+        <div class="line line-3"></div>
+        <div class="line line-4"></div>
+    </div>
+
+    <!-- Modal de cancelación -->
+    <div class="modal-overlay" id="modalCancelacion">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Cancelar Trabajo</h3>
+                <button class="close-modal" onclick="cerrarModalCancelacion()">&times;</button>
+            </div>
+            <form id="formCancelacion">
+                <input type="hidden" id="trabajoIdCancelacion" value="">
+                <div class="form-group">
+                    <label for="motivoCancelacion">Motivo de cancelación:</label>
+                    <textarea id="motivoCancelacion" placeholder="Explica brevemente por qué cancelas este trabajo..." required></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-cancel" onclick="cerrarModalCancelacion()">Volver</button>
+                    <button type="button" class="btn btn-danger" onclick="confirmarCancelacion()">Confirmar Cancelación</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="container">
+        <header class="header">
+            <div class="logo-container">
+                <div class="logo">Quick<span>Fix</span></div>
+                <a href="{{ url_for('home') }}" class="back-button"><i class="fas fa-arrow-left"></i> Volver al Inicio</a>
+            </div>
+            <nav class="nav">
+                <a href="{{ url_for('home') }}" class="nav-item">Inicio</a>
+                <a href="/trabajos" class="nav-item">Solicitudes</a>
+                <a href="/trabajos_pendientes" class="nav-item active">Trabajos Pendientes</a>
+                <a href="#" class="nav-item">Historial</a>
+                <a class="nav-item" href="{{ url_for('logout') }}"><i class="fas fa-user"></i> Cerrar Sesión</a>
+            </nav>
+        </header>
+
+        <main class="main-content">
+            <div class="page-header">
+                <h1>Trabajos Pendientes</h1>
+                <p>Estos son los trabajos que has aceptado y debes completar.</p>
+            </div>
+
+            {% if trabajos %}
+            <div class="trabajos-grid">
+                {% for trabajo in trabajos %}
+                <div class="trabajo-card">
+                    <div class="trabajo-header">
+                        <h3>{{ trabajo.especializacion }}</h3>
+                        <span class="estado-badge estado-pendiente">Pendiente</span>
+                    </div>
+
+                    <div class="trabajo-info">
+                        <div class="info-group">
+                            <h4>Información del Cliente</h4>
+                            <div class="info-item">
+                                <span class="info-label">Nombre:</span>
+                                <span class="info-value">{{ trabajo.cliente_nombre }}</span>
+                            </div>
+                        </div>
+
+                        <div class="info-group">
+                            <h4>Detalles del Trabajo</h4>
+                            <div class="info-item">
+                                <span class="info-label">Fecha acordada:</span>
+                                <span class="info-value">{{ trabajo.fecha_trabajo_propuesta }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Ubicación:</span>
+                                <span class="info-value">{{ trabajo.ubicacion }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Método de pago:</span>
+                                <span class="info-value">{{ trabajo.metodo_pago }}</span>
+                            </div>
+                        </div>
+
+                        <div class="info-group">
+                            <h4>Especificaciones</h4>
+                            <p class="especificaciones">{{ trabajo.especificaciones }}</p>
+                        </div>
+
+                        {% if trabajo.especificaciones_trabajador %}
+                        <div class="info-group">
+                            <h4>Tus comentarios anteriores</h4>
+                            <p class="comentarios-trabajador">{{ trabajo.especificaciones_trabajador }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Botones de acción -->
+                    <div class="trabajo-actions">
+                        <button class="btn btn-complete" onclick="finalizarTrabajo('{{ trabajo.id }}')">
+                            <i class="fas fa-check-circle"></i> Finalizado
+                        </button>
+                        <button class="btn btn-contact" onclick="contactarCliente('{{ trabajo.cliente_id }}')">
+                            <i class="fas fa-envelope"></i> Contactar Cliente
+                        </button>
+                        <button class="btn btn-cancel-job" onclick="abrirModalCancelacion('{{ trabajo.id }}')">
+                            <i class="fas fa-times-circle"></i> Cancelar Trabajo
+                        </button>
+                    </div>
+
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-clipboard-check"></i>
+                <h3>No tienes trabajos pendientes</h3>
+                <p>Cuando aceptes trabajos, aparecerán aquí hasta que los marques como finalizados.</p>
+                <a href="/trabajos" class="btn btn-primary">Ver solicitudes disponibles</a>
+            </div>
+            {% endif %}
+        </main>
+    </div>
+
+    <script>
+        function finalizarTrabajo(trabajoId) {
+            if (confirm('¿Estás seguro de que deseas marcar este trabajo como finalizado?')) {
+                fetch(`/finalizar_trabajo/${trabajoId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Trabajo marcado como finalizado con éxito');
+                        location.reload();
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error al procesar la solicitud');
+                });
+            }
+        }
+
+        function contactarCliente(clienteId) {
+            alert('Funcionalidad de contacto con el cliente en desarrollo para ID: ' + clienteId);
+        }
+
+        // Modal cancelación
+        let trabajoCancelacionId = '';
+
+        function abrirModalCancelacion(trabajoId) {
+            trabajoCancelacionId = trabajoId;
+            document.getElementById('trabajoIdCancelacion').value = trabajoId;
+            document.getElementById('motivoCancelacion').value = '';
+            document.getElementById('modalCancelacion').style.display = 'flex';
+        }
+
+        function cerrarModalCancelacion() {
+            document.getElementById('modalCancelacion').style.display = 'none';
+            trabajoCancelacionId = '';
+        }
+
+        function confirmarCancelacion() {
+            const motivo = document.getElementById('motivoCancelacion').value.trim();
+            if (!motivo) { alert('Por favor, ingresa el motivo de la cancelación.'); return; }
+            if (confirm('¿Estás seguro de cancelar este trabajo?')) {
+                fetch(`/cancelar_trabajo/${trabajoCancelacionId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ motivo: motivo })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Trabajo cancelado correctamente');
+                        cerrarModalCancelacion();
+                        location.reload();
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error al procesar la solicitud');
+                });
+            }
+        }
+
+        // Cerrar modal al hacer click fuera del contenido
+        document.getElementById('modalCancelacion').addEventListener('click', function(e) {
+            if (e.target === this) cerrarModalCancelacion();
+        });
+
+        // Evitar submit con Enter dentro del textarea
+        document.getElementById('formCancelacion').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') e.preventDefault();
+        });
+    </script>
+</body>
+</html>

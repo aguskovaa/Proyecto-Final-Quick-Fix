@@ -341,6 +341,73 @@
             color: #856404;
             font-size: 14px;
         }
+
+        section.pendientes {
+        border: 1px solid #2563eb;
+        background-color: #e0f2fe;
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 8px;
+    }
+
+    section.pendientes h2 {
+        color: #1e40af;
+    }
+
+    section.aceptados {
+        border: 1px solid #fbbf24;
+        background-color: #fff7ed;
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 8px;
+    }
+
+    section.aceptados h2 {
+        color: #b45309;
+    }
+
+    section.finalizados {
+        background-color: #e8f5e9;
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 8px;
+    }
+
+    section.finalizados h2 {
+    }
+
+    section.cancelados {
+        background-color: #ffebee;
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 8px;
+    }
+
+    section.cancelados h2 {
+    }
+.finalizados .solicitud-card,
+.cancelados .solicitud-card {
+    border: 1px solid #e0e6ed;
+    border-radius: 12px;
+    padding: 20px;
+    background: white;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.finalizados .solicitud-card:hover,
+.cancelados .solicitud-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+}
+
+.finalizados .estado-badge {
+    background: #d4edda;
+}
+
+.cancelados .estado-badge {
+    background: #f8d7da;
+}
+
     </style>
 </head>
 <body>
@@ -528,6 +595,91 @@
                     {% endif %}
                 </div>
             </div>
+
+
+           <!-- Finalizados -->
+<section class="finalizados">
+    <h2>Finalizados ({{ solicitudes_finalizadas|length }})</h2>
+    <div class="solicitudes-grid">
+        {% if solicitudes_finalizadas %}
+            {% for s in solicitudes_finalizadas %}
+            <div class="solicitud-card">
+                <div class="solicitud-header">
+                    <h3 class="solicitud-title">{{ s.especializacion }}</h3>
+                    <span class="estado-badge estado-aceptado">Finalizado</span>
+                </div>
+                <div class="solicitud-info">
+                    <div class="info-item">
+                        <span class="info-label">Profesional:</span>
+                        <span class="info-value">{{ s.profesional_nombre or 'No asignado' }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Fecha propuesta:</span>
+                        <span class="info-value">{{ s.fecha_trabajo_propuesta }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Fecha finalización:</span>
+                        <span class="info-value">{{ s.fecha_finalizacion }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Especificaciones:</span>
+                        <span class="info-value">{{ s.especificaciones }}</span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-check-circle"></i>
+                <h3>No hay trabajos finalizados</h3>
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Cancelados -->
+<section class="cancelados">
+    <h2>Cancelados ({{ solicitudes_canceladas|length }})</h2>
+    <div class="solicitudes-grid">
+        {% if solicitudes_canceladas %}
+            {% for s in solicitudes_canceladas %}
+            <div class="solicitud-card">
+                <div class="solicitud-header">
+                    <h3 class="solicitud-title">{{ s.especializacion }}</h3>
+                    <span class="estado-badge estado-rechazado">Cancelado</span>
+                </div>
+                <div class="solicitud-info">
+                    <div class="info-item">
+                        <span class="info-label">Profesional:</span>
+                        <span class="info-value">{{ s.profesional_nombre or 'No asignado' }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Fecha propuesta:</span>
+                        <span class="info-value">{{ s.fecha_trabajo_propuesta }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Fecha cancelación:</span>
+                        <span class="info-value">{{ s.fecha_cancelacion }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Motivo de cancelación:</span>
+                        <span class="info-value">{{ s.motivo_cancelacion or 'No especificado' }}</span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-times-circle"></i>
+                <h3>No hay trabajos cancelados</h3>
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+
+
+
         </main>
     </div>
 

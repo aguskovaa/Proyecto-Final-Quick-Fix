@@ -101,9 +101,10 @@
                                 <span class="notification-badge">{{ solicitudes_pendientes }}</span>
                                 {% endif %}
                             </div>
-                            <a href="/mis-trabajos" class="cta-button secondary">
+                            <a href="{{ url_for('trabajos_pendientes') }}" class="cta-button secondary">
                                 Trabajos pendientes
                             </a>
+
                         {% else %}
                             <a href="/oportunidades" class="cta-button primary">
                                 Oportunidades <i class="fas fa-arrow-right"></i>
