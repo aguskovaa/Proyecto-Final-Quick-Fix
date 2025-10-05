@@ -24,17 +24,23 @@
     <h2>Iniciar Sesión</h2>
 
     <form id="loginForm" method="POST" action="/login">
-      <div class="cajita">
-        <label for="username">Email:</label>
+      <div class="cajita password-container">
+    <label for="contra">Contraseña</label>
+    <div class="password-input-wrapper">
         <input
-          type="email"
-          id="username"
-          name="username"
-          required
-          placeholder="Ingresa tu mail"
-          value="{{ request.form.username or '' }}"
+            type="password"
+            id="contra"
+            name="contra"
+            required
+            placeholder="Tu contraseña"
+            value="{{ request.form.contra or '' }}"
+            class="password-input"
         />
-      </div>
+        <button type="button" class="password-toggle" id="togglePassword">
+            <i class="fas fa-eye"></i>
+        </button>
+    </div>
+</div>
 
       <div class="cajita">
         <label for="contra">Contraseña</label>
@@ -118,6 +124,8 @@
 
       // Si todo está bien, se envía el formulario y la validación continúa en backend
     });
+
+    
   </script>
 </body>
 </html>
