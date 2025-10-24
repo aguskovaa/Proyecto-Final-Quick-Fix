@@ -468,31 +468,46 @@
                 <div class="solicitudes-grid">
                     {% if solicitudes_aceptadas %}
                         {% for solicitud in solicitudes_aceptadas %}
-                        <div class="solicitud-card">
-                            <div class="solicitud-header">
-                                <h3 class="solicitud-title">{{ solicitud.especializacion }}</h3>
-                                <span class="estado-badge estado-aceptado">Aceptada</span>
-                            </div>
-                            <div class="solicitud-info">
-                                <div class="info-item">
-                                    <span class="info-label">Profesional:</span>
-                                    <span class="info-value">{{ solicitud.profesional_nombre }}</span>
-                                </div>
-                                <div class="info-item">
-                                    <span class="info-label">Fecha:</span>
-                                    <span class="info-value">{{ solicitud.fecha_trabajo_propuesta }}</span>
-                                </div>
-                                <div class="info-item">
-                                    <span class="info-label">Ubicación:</span>
-                                    <span class="info-value">{{ solicitud.ubicacion }}</span>
-                                </div>
-                                <div class="info-item">
-                                    <span class="info-label">Estado:</span>
-                                    <span class="info-value">El profesional aceptó tu solicitud</span>
-                                </div>
-                            </div>
-                        </div>
-                        {% endfor %}
+<div class="solicitud-card">
+    <div class="solicitud-header">
+        <h3 class="solicitud-title">{{ solicitud.especializacion or solicitud.titulo or solicitud.categoria }}</h3>
+        <div>
+            <span class="estado-badge estado-aceptado">Aceptada</span>
+            {% if solicitud.get('origen') == 'muro' %}
+            <span class="estado-badge" style="background: #28a745; color: white; margin-left: 5px;">📰 Muro</span>
+            {% endif %}
+        </div>
+    </div>
+    <div class="solicitud-info">
+        <div class="info-item">
+            <span class="info-label">Profesional:</span>
+            <span class="info-value">{{ solicitud.profesional_nombre }}</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Fecha:</span>
+            <span class="info-value">{{ solicitud.fecha_trabajo_propuesta or solicitud.fecha_limite or 'Por acordar' }}</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Ubicación:</span>
+            <span class="info-value">{{ solicitud.ubicacion }}</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Origen:</span>
+            <span class="info-value">
+                {% if solicitud.get('origen') == 'muro' %}
+                📰 Publicación del Muro
+                {% else %}
+                🔍 Búsqueda Directa
+                {% endif %}
+            </span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Estado:</span>
+            <span class="info-value">El profesional aceptó tu solicitud</span>
+        </div>
+    </div>
+</div>
+{% endfor %}
                     {% else %}
                         <div class="empty-state">
                             <i class="fas fa-check-circle"></i>

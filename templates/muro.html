@@ -381,20 +381,16 @@
                     </div>
                     
                     <div class="pub-footer">
-                        <div class="pub-estado {{ 'estado-proceso' if publicacion.estado == 'en_proceso' else 'estado-disponible' }}">
-                            {{ 'En proceso' if publicacion.estado == 'en_proceso' else 'Disponible' }}
-                        </div>
-                        
-                        {% if user_type == '2' and publicacion.estado == 'disponible' %}
-                        <button class="btn-aceptar" onclick="aceptarTrabajo('{{ publicacion.id }}')">
-                            <i class="fas fa-handshake"></i> Aceptar Trabajo
-                        </button>
-                        {% elif user_type == '2' and publicacion.estado == 'en_proceso' %}
-                        <button class="btn-aceptar" disabled>
-                            <i class="fas fa-clock"></i> En proceso
-                        </button>
-                        {% endif %}
-                    </div>
+    <div class="pub-estado estado-disponible">
+        Disponible
+    </div>
+    
+    {% if user_type == '2' %}
+    <button class="btn-aceptar" onclick="aceptarTrabajo('{{ publicacion.id }}')">
+        <i class="fas fa-handshake"></i> Aceptar Trabajo
+    </button>
+    {% endif %}
+</div>
                 </div>
                 {% endfor %}
             {% else %}

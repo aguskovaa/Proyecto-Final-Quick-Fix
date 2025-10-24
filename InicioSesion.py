@@ -191,9 +191,10 @@ def muro_publicaciones():
     try:
         user_type = session.get('user_type')
         
-        # Obtener todas las publicaciones del muro
+        # Obtener solo las publicaciones DISPONIBLES (no las que están en proceso)
         muro_ref = db.collection('MuroPublicaciones')
-        docs = muro_ref.stream()
+        query = muro_ref.where('estado', '==', 'disponible')  # SOLO LAS DISPONIBLES
+        docs = query.stream()
         
         publicaciones = []
         for doc in docs:
@@ -276,38 +277,44 @@ def aceptar_trabajo_muro(publicacion_id):
         
         publicacion_data = publicacion.to_dict()
         
-        # Crear solicitud de trabajo
+        # Crear solicitud de trabajo directamente ACEPTADA
         trabajo_data = {
             'cliente_id': publicacion_data.get('cliente_id'),
             'cliente_nombre': publicacion_data.get('cliente_nombre'),
-            'trabajador_id': session.get('user_id'),
-            'trabajador_nombre': session.get('user_name', 'Trabajador'),
+            'profesional_id': session.get('user_id'),
+            'profesional_nombre': session.get('user_name', 'Trabajador'),
             'titulo': publicacion_data.get('titulo'),
+            'especializacion': publicacion_data.get('categoria'),
             'descripcion': publicacion_data.get('descripcion'),
             'categoria': publicacion_data.get('categoria'),
             'ubicacion': publicacion_data.get('ubicacion'),
             'presupuesto': publicacion_data.get('presupuesto'),
-            'fecha_limite': publicacion_data.get('fecha_limite'),
-            'estado': 'pendiente',
+            'fecha_trabajo_propuesta': publicacion_data.get('fecha_limite'),
+            'especificaciones': publicacion_data.get('descripcion'),
+            'metodo_pago': 'efectivo',  # Valor por defecto para trabajos del muro
+            'estado': 'aceptado',  # ✅ DIRECTAMENTE ACEPTADO
             'fecha_solicitud': datetime.now(),
-            'origen': 'muro'
+            'fecha_actualizacion': datetime.now(),
+            'origen': 'muro',
+            'aceptado_directamente': True  # Marcar que fue aceptado directamente del muro
         }
         
         # Guardar en PendClienteTrabajador
         pendientes_ref = db.collection('PendClienteTrabajador')
         nuevo_trabajo = pendientes_ref.add(trabajo_data)
         
-        # Marcar publicación como "en proceso"
+        # Marcar publicación como "aceptado" (desaparecerá del muro)
         pub_ref.update({
-            'estado': 'en_proceso',
+            'estado': 'aceptado',
             'trabajador_asignado_id': session.get('user_id'),
             'trabajador_asignado_nombre': session.get('user_name', 'Trabajador'),
-            'fecha_asignacion': datetime.now()
+            'fecha_asignacion': datetime.now(),
+            'trabajo_id': nuevo_trabajo[1].id  # Guardar referencia al trabajo creado
         })
         
         return jsonify({
             'success': True, 
-            'message': 'Trabajo aceptado exitosamente. Se ha enviado una solicitud al cliente.',
+            'message': 'Trabajo aceptado exitosamente. Ya aparece en tus trabajos pendientes.',
             'trabajo_id': nuevo_trabajo[1].id
         })
         
@@ -807,31 +814,35 @@ def trabajos():
 @app.route('/mis_solicitudes')
 def mis_solicitudes():
     try:
-        # SOLICITUDES PENDIENTES
+        # SOLICITUDES PENDIENTES (excluyendo las del muro que fueron aceptadas directamente)
         solicitudes_pendientes = []
         docs_pendientes = db.collection('PendClienteTrabajador').where('estado', '==', 'pendiente').stream()
         
         for doc in docs_pendientes:
             data = doc.to_dict()
-            data['documento_id'] = doc.id  # ← AGREGAR ID DEL DOCUMENTO
-            solicitudes_pendientes.append(data)
+            data['documento_id'] = doc.id
+            # Solo incluir si no es una aceptación directa del muro
+            if not data.get('aceptado_directamente'):
+                solicitudes_pendientes.append(data)
 
-        # SOLICITUDES ACEPTADAS
+        # SOLICITUDES ACEPTADAS (incluyendo las del muro)
         solicitudes_aceptadas = []
         docs_aceptados = db.collection('PendClienteTrabajador').where('estado', '==', 'aceptado').stream()
         
         for doc in docs_aceptados:
             data = doc.to_dict()
-            data['documento_id'] = doc.id  # ← AGREGAR ID DEL DOCUMENTO
+            data['documento_id'] = doc.id
+            # Incluir tanto trabajos normales como del muro
             solicitudes_aceptadas.append(data)
 
+        # ... (el resto del código de la función se mantiene igual)
         # SOLICITUDES DEVUELTAS
         solicitudes_devueltas = []
         docs_devueltos = db.collection('PendClienteTrabajador').where('estado', '==', 'devuelto').stream()
         
         for doc in docs_devueltos:
             data = doc.to_dict()
-            data['documento_id'] = doc.id  # ← AGREGAR ID DEL DOCUMENTO
+            data['documento_id'] = doc.id
             solicitudes_devueltas.append(data)
 
         # SOLICITUDES RECHAZADAS
@@ -840,7 +851,7 @@ def mis_solicitudes():
         
         for doc in docs_rechazados:
             data = doc.to_dict()
-            data['documento_id'] = doc.id  # ← AGREGAR ID DEL DOCUMENTO
+            data['documento_id'] = doc.id
             solicitudes_rechazadas.append(data)
 
         # SOLICITUDES FINALIZADAS (de TrabajosFinalizados)
@@ -849,7 +860,7 @@ def mis_solicitudes():
         
         for doc in docs_finalizados:
             data = doc.to_dict()
-            data['documento_id'] = doc.id  # ← AGREGAR ID DEL DOCUMENTO
+            data['documento_id'] = doc.id
             solicitudes_finalizadas.append(data)
 
         # SOLICITUDES CANCELADAS (de TrabajosCancelados)
@@ -858,10 +869,10 @@ def mis_solicitudes():
         
         for doc in docs_cancelados:
             data = doc.to_dict()
-            data['documento_id'] = doc.id  # ← AGREGAR ID DEL DOCUMENTO
+            data['documento_id'] = doc.id
             solicitudes_canceladas.append(data)
 
-        # Obtener especialidades predefinidas (si las necesitas)
+        # Obtener especialidades predefinidas
         especialidades_predefinidas = [
             "Fontanero Pionero", 
             "Electricista", 
@@ -884,7 +895,6 @@ def mis_solicitudes():
 
     except Exception as e:
         print(f"Error al obtener solicitudes: {e}")
-        # En caso de error, pasar listas vacías
         return render_template('MisSolicitudes.html',
                              solicitudes_pendientes=[],
                              solicitudes_aceptadas=[],
@@ -1231,7 +1241,7 @@ def trabajos_pendientes():
     try:
         trabajador_id = session.get('user_id')
         
-        # Obtener TRABAJOS ACEPTADOS (contrataciones de clientes) - solo activos
+        # Obtener TRABAJOS ACEPTADOS (incluyendo los del muro)
         trabajos_ref = db.collection('PendClienteTrabajador')
         query_trabajos = trabajos_ref.where('profesional_id', '==', trabajador_id).where('estado', '==', 'aceptado')
         docs_trabajos = query_trabajos.stream()
@@ -1247,9 +1257,13 @@ def trabajos_pendientes():
             
             if not finalizado_doc.exists:
                 trabajo_data['tipo'] = 'contratacion'
+                # Marcar si es del muro para mostrarlo diferente
+                if trabajo_data.get('origen') == 'muro':
+                    trabajo_data['es_muro'] = True
                 trabajos_aceptados.append(trabajo_data)
         
-        # Obtener MENTORÍAS ACEPTADAS - solo las que están activas (no completadas)
+        # ... (el resto del código de la función se mantiene igual)
+        # Obtener MENTORÍAS ACEPTADAS
         mentorias_ref = db.collection('Mentorias')
         query_mentorias = mentorias_ref.where('mentor_id', '==', trabajador_id).where('estado', '==', 'aceptado')
         docs_mentorias = query_mentorias.stream()
@@ -1264,7 +1278,6 @@ def trabajos_pendientes():
         # Combinar ambas listas
         todos_los_trabajos = trabajos_aceptados + mentorias_activas
         
-        # ==== AGREGAR ESTA PARTE NUEVA ====
         # Obtener TRABAJOS COMPLETADOS (historial)
         trabajos_finalizados_ref = db.collection('TrabajosFinalizados')
         query_completados = trabajos_finalizados_ref.where('profesional_id', '==', trabajador_id)
@@ -1287,7 +1300,6 @@ def trabajos_pendientes():
             mentoria_data['id'] = doc.id
             mentoria_data['tipo'] = 'mentoria-completada'
             mentorias_completadas.append(mentoria_data)
-        # ==== FIN DE LA PARTE NUEVA ====
 
         return render_template('TrabajosPendientes.html', 
                              trabajos=todos_los_trabajos,

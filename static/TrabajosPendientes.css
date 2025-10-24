@@ -208,3 +208,9 @@ body {
     color: var(--text-light);
     font-size: 14px;
 }
+
+/* Badge para trabajos del muro */
+.tipo-badge.tipo-muro {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+}

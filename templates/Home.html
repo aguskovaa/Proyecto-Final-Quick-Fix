@@ -21,13 +21,15 @@
 
     <!-- Solo Botón de Chat Flotante -->
     {% if session.get('is_logged_in') %}
-        <!-- Botones Flotantes -->
+            <!-- Botones Flotantes -->
     {% if session.get('is_logged_in') %}
     <div class="floating-buttons">
-        <!-- Botón del Muro -->
+        <!-- Botón del Muro - Solo para clientes (1) y trabajadores (2) -->
+        {% if session.get('user_type') == '1' or session.get('user_type') == '2' %}
         <div class="chat-icon muro-icon" id="muroButton">
             <i class="fas fa-newspaper"></i>
         </div>
+        {% endif %}
         
         <!-- Botón de Chat -->
         <div class="chat-icon" id="chatButton">

@@ -67,66 +67,81 @@
                 {% if trabajos_contrataciones %}
                 <div class="trabajos-grid">
                     {% for trabajo in trabajos_contrataciones %}
-                    <div class="trabajo-card" data-tipo="contratacion">
-                        <div class="tipo-badge tipo-contratacion">💰 Contratación</div>
-                        
-                        <div class="trabajo-header">
-                            <h3>{{ trabajo.especializacion }}</h3>
-                            <span class="estado-badge estado-pendiente">Pendiente</span>
-                        </div>
+<div class="trabajo-card" data-tipo="contratacion">
+    <!-- AGREGAR BADGE ESPECIAL PARA TRABAJOS DEL MURO -->
+    {% if trabajo.get('origen') == 'muro' %}
+    <div class="tipo-badge tipo-muro">📰 Del Muro</div>
+    {% else %}
+    <div class="tipo-badge tipo-contratacion">💰 Contratación</div>
+    {% endif %}
+    
+    <div class="trabajo-header">
+        <h3>{{ trabajo.especializacion or trabajo.titulo or trabajo.categoria }}</h3>
+        <span class="estado-badge estado-pendiente">Aceptado</span>
+    </div>
 
-                        <div class="trabajo-info">
-                            <div class="info-group">
-                                <h4>Información del Cliente</h4>
-                                <div class="info-item">
-                                    <span class="info-label">Cliente:</span>
-                                    <span class="info-value">{{ trabajo.cliente_nombre }}</span>
-                                </div>
-                            </div>
+    <div class="trabajo-info">
+        <div class="info-group">
+            <h4>Información del Cliente</h4>
+            <div class="info-item">
+                <span class="info-label">Cliente:</span>
+                <span class="info-value">{{ trabajo.cliente_nombre }}</span>
+            </div>
+            <!-- MOSTRAR ORIGEN -->
+            <div class="info-item">
+                <span class="info-label">Origen:</span>
+                <span class="info-value">
+                    {% if trabajo.get('origen') == 'muro' %}
+                    📰 Publicación del Muro
+                    {% else %}
+                    🔍 Búsqueda Directa
+                    {% endif %}
+                </span>
+            </div>
+        </div>
 
-                            <div class="info-group">
-                                <h4>Detalles del Trabajo</h4>
-                                <div class="info-item">
-                                    <span class="info-label">Fecha acordada:</span>
-                                    <span class="info-value">{{ trabajo.fecha_trabajo_propuesta }}</span>
-                                </div>
-                                <div class="info-item">
-                                    <span class="info-label">Ubicación:</span>
-                                    <span class="info-value">{{ trabajo.ubicacion }}</span>
-                                </div>
-                                <div class="info-item">
-                                    <span class="info-label">Método de pago:</span>
-                                    <span class="info-value">{{ trabajo.metodo_pago }}</span>
-                                </div>
-                            </div>
+        <div class="info-group">
+            <h4>Detalles del Trabajo</h4>
+            <div class="info-item">
+                <span class="info-label">Fecha acordada:</span>
+                <span class="info-value">{{ trabajo.fecha_trabajo_propuesta or trabajo.fecha_limite or 'Por acordar' }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Ubicación:</span>
+                <span class="info-value">{{ trabajo.ubicacion }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Método de pago:</span>
+                <span class="info-value">{{ trabajo.metodo_pago or 'Por acordar' }}</span>
+            </div>
+            {% if trabajo.presupuesto %}
+            <div class="info-item">
+                <span class="info-label">Presupuesto:</span>
+                <span class="info-value">${{ trabajo.presupuesto }}</span>
+            </div>
+            {% endif %}
+        </div>
 
-                            <div class="info-group">
-                                <h4>Especificaciones</h4>
-                                <p class="especificaciones">{{ trabajo.especificaciones }}</p>
-                            </div>
+        <div class="info-group">
+            <h4>Descripción del Trabajo</h4>
+            <p class="especificaciones">{{ trabajo.especificaciones or trabajo.descripcion }}</p>
+        </div>
+    </div>
 
-                            {% if trabajo.especificaciones_trabajador %}
-                            <div class="info-group">
-                                <h4>Tus comentarios anteriores</h4>
-                                <p class="comentarios-trabajador">{{ trabajo.especificaciones_trabajador }}</p>
-                            </div>
-                            {% endif %}
-                        </div>
-
-                        <!-- Botones de acción -->
-                        <div class="trabajo-actions">
-                            <button class="btn btn-complete" onclick="finalizarTrabajo('{{ trabajo.id }}', 'contratacion')">
-                                <i class="fas fa-check-circle"></i> Finalizado
-                            </button>
-                            <button class="btn btn-contact" onclick="contactarCliente('{{ trabajo.cliente_id }}')">
-                                <i class="fas fa-envelope"></i> Contactar Cliente
-                            </button>
-                            <button class="btn btn-cancel-job" onclick="abrirModalCancelacion('{{ trabajo.id }}', 'contratacion')">
-                                <i class="fas fa-times-circle"></i> Cancelar Trabajo
-                            </button>
-                        </div>
-                    </div>
-                    {% endfor %}
+    <!-- Botones de acción (se mantienen igual) -->
+    <div class="trabajo-actions">
+        <button class="btn btn-complete" onclick="finalizarTrabajo('{{ trabajo.id }}', 'contratacion')">
+            <i class="fas fa-check-circle"></i> Finalizado
+        </button>
+        <button class="btn btn-contact" onclick="contactarCliente('{{ trabajo.cliente_id }}')">
+            <i class="fas fa-envelope"></i> Contactar Cliente
+        </button>
+        <button class="btn btn-cancel-job" onclick="abrirModalCancelacion('{{ trabajo.id }}', 'contratacion')">
+            <i class="fas fa-times-circle"></i> Cancelar Trabajo
+        </button>
+    </div>
+</div>
+{% endfor %}
                 </div>
                 {% else %}
                 <div class="empty-section">
