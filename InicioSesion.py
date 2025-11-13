@@ -1625,5 +1625,5 @@ def rechazar_mentoria(mentoria_id):
 
 print ""
 
-if __name__ == '__main__':
-    app.run()
+#if __name__ == '__main__':
+    #app.run()
