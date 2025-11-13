@@ -42,10 +42,6 @@ ESPECIALIDADES_PREDEFINIDAS = [
 def index():
     return render_template('Inicio_de_Sesion.html')
 
-
-# ===== RUTAS DEL CHAT =====
-
-# ⚠️ REEMPLAZAR ESTA FUNCIÓN COMPLETA:
 @app.route('/chat_home')
 def chat_home():
     if not session.get('is_logged_in'):
@@ -1630,4 +1626,4 @@ def rechazar_mentoria(mentoria_id):
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()
