@@ -1623,6 +1623,6 @@ def rechazar_mentoria(mentoria_id):
         print(f"Error al rechazar mentoría: {str(e)}")
         return jsonify({'success': False, 'message': 'Error al procesar la solicitud'})
 
-s
+
 if __name__ == '__main__':
     app.run(host="0.0.0.0", debug = True)
