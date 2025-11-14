@@ -1,5 +1,2 @@
-mercadopago==2.0.4
-qrcode[pil]==7.4.2
-Pillow==10.0.0
-requests==2.31.0
-pip install flask mercadopago qrcode[pil] pillow
+flask
+firebase_admin
